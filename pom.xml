@@ -1,0 +1,299 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.github.matsim-org</groupId>
+    <artifactId>matsim-episim-example</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <name>MATSim Episim Example</name>
+    <description>Epidemic simulation for MATSim</description>
+    <organization>
+        <name>matsim-org</name>
+        <url>https://matsim.org</url>
+    </organization>
+    <inceptionYear>2020</inceptionYear>
+    <licenses>
+        <license>
+            <name>GNU Affero General Public License (AGPL) version 3.0</name>
+        </license>
+    </licenses>
+
+    <properties>
+        <episim.version>21.1</episim.version>
+        <java.version>11</java.version>
+        <mainClass>org.matsim.run.RunEpisim</mainClass>
+    </properties>
+
+    <repositories>
+
+        <!-- Main repo for episim -->
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/matsim-org/matsim-episim-libs</url>
+        </repository>
+
+        <!-- Repository for MATSim releases (MATSim is not on Maven central) -->
+        <repository>
+            <id>matsim</id>
+            <url>https://dl.bintray.com/matsim/matsim</url>
+        </repository>
+
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+
+        <repository>
+            <id>osgeo</id>
+            <name>OSGeo Release Repository</name>
+            <url>https://repo.osgeo.org/repository/release/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </repository>
+
+        <repository>
+            <!-- Required for MATSim snaphots -->
+            <id>ojo-snapshots</id>
+            <url>http://oss.jfrog.org/libs-snapshot</url>
+        </repository>
+
+        <!-- The following ones seem to be needed for some OSM stuff. /sh -->
+        <repository>
+            <id>topobyte</id>
+            <url>https://mvn.topobyte.de</url>
+        </repository>
+
+        <repository>
+            <id>slimjars</id>
+            <url>http://mvn.slimjars.com</url>
+        </repository>
+
+        <repository>
+            <id>tablesaw</id>
+            <url>https://mvnrepository.com/artifact/tech.tablesaw/tablesaw-core</url>
+        </repository>
+
+    </repositories>
+
+    <dependencies>
+
+        <!-- This is the matsim "core": -->
+        <dependency>
+            <groupId>com.github.matsim-org</groupId>
+            <artifactId>matsim-episim</artifactId>
+            <version>${episim.version}</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <showWarnings>false</showWarnings>
+                    <showDeprecation>false</showDeprecation>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M5</version>
+                <configuration>
+                    <excludes>
+                        <exclude>**/*$*</exclude> <!-- exclude all inner classes -->
+                    </excludes>
+                    <!-- Don't run multiple tests in one jvm! Class mocking interferes with the integration test -->
+                    <reuseForks>false</reuseForks>
+                    <!-- avoid out of memory errors: -->
+                    <argLine>-Xmx6000m -Djava.awt.headless=true -Dmatsim.preferLocalDtds=true</argLine>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.2</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <outputFile>${project.basedir}/${project.build.finalName}.jar</outputFile>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>${mainClass}</mainClass>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            </transformers>
+                            <filters>
+                                <!-- Avoid signature checking -->
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                                <!-- Force some inclusion because of minimizing -->
+                                <filter>
+                                    <artifact>org.apache.logging.log4j:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>xerces:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.hibernate.validator:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.glassfish:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                            </filters>
+                            <minimizeJar>true</minimizeJar>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>  <!-- Create sources.jar -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>2.0.0</version>
+                <configuration>
+                    <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
+                    <emptyLineAfterHeader>false</emptyLineAfterHeader>
+                    <licenseName>agpl_v3</licenseName>
+                    <roots>
+                        <root>src/main/java</root>
+                    </roots>
+                </configuration>
+            </plugin>
+
+            <!-- Generate autocompletion scripts -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <configuration>
+                    <executable>java</executable>
+                    <arguments>
+                        <argument>-Dpicocli.autocomplete.systemExitOnError</argument>
+                        <argument>-cp</argument>
+                        <classpath/>
+                        <argument>picocli.AutoComplete</argument>
+                        <argument>--force</argument><!-- overwrite if exists -->
+                        <argument>--completionScript</argument>
+                        <argument>${project.build.directory}/episim_auto_completion.bash</argument>
+                        <argument>${mainClass}</argument>
+                    </arguments>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>generate-autocompletion-script</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+
+                <defaultGoal>shade:shade</defaultGoal>
+                <!--the above line is the reason why mvn -Prelease works without defining a goal.-->
+
+                <pluginManagement>
+                    <!--pluginManagement further defines plugins *if* they are loaded-->
+                    <plugins>
+                        <plugin>
+                            <groupId>org.codehaus.mojo</groupId>
+                            <artifactId>license-maven-plugin</artifactId>
+                            <executions>
+                                <execution>
+                                    <id>update-license-header</id>
+                                    <goals>
+                                        <goal>update-file-header</goal>
+                                    </goals>
+                                    <phase>process-sources</phase>
+                                </execution>
+                            </executions>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+        <profile>
+            <id>java-9+</id>
+            <activation>
+                <jdk>[9</jdk>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>javax.xml.bind</groupId>
+                    <artifactId>jaxb-api</artifactId>
+                    <version>2.3.1</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.sun.xml.bind</groupId>
+                    <artifactId>jaxb-core</artifactId>
+                    <version>2.3.0.1</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.sun.xml.bind</groupId>
+                    <artifactId>jaxb-impl</artifactId>
+                    <version>2.3.0.1</version>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
+
+</project>
