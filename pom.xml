@@ -153,6 +153,12 @@
                                 </filter>
                                 <!-- Force some inclusion because of minimizing -->
                                 <filter>
+                                    <artifact>com.github.matsim-org:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
                                     <artifact>org.apache.logging.log4j:*</artifact>
                                     <includes>
                                         <include>**</include>
