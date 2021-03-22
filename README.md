@@ -52,8 +52,8 @@ The `BatchRun` class allows running one scenario many times with a different par
         --setup org.matsim.episim.run.batch.OpenBerlinBatch \
         --params org.matsim.episim.run.batch.OpenBerlinBatch$Params
 
-The `OpenBerlinBatch` class show how such a batch run can be defined. It is also possible prepare executable
-scripts for running the batch on a cluster.
+The `OpenBerlinBatch` class shows how such a batch run can be defined. It is also possible prepare executable
+scripts for running the batch on a cluster:
 
     java -jar matsim-episim-example-1.0-SNAPSHOT.jar createBattery \
         --setup org.matsim.episim.run.batch.OpenBerlinBatch \
