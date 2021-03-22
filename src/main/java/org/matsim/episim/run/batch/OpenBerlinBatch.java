@@ -60,10 +60,10 @@ public class OpenBerlinBatch implements BatchRun<OpenBerlinBatch.Params> {
 
 	public static final class Params {
 
-		@GenerateSeeds(20)
+		@GenerateSeeds(10)
 		public long seed;
 
-		@Parameter({0.001, 0.01, 0.1, 0.5, 1})
+		@Parameter({0.001, 0.01, 0.1})
 		public double calibrationParameter;
 
 		@StringParameter({"no", "yes"})
