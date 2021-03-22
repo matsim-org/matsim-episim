@@ -8,6 +8,7 @@ import org.matsim.episim.TracingConfigGroup;
 import org.matsim.episim.policy.FixedPolicy;
 import org.matsim.episim.policy.Restriction;
 import org.matsim.episim.run.modules.OpenBerlinScenario;
+import org.matsim.run.RunParallel;
 
 import javax.annotation.Nullable;
 import java.time.LocalDate;
@@ -75,6 +76,18 @@ public class OpenBerlinBatch implements BatchRun<OpenBerlinBatch.Params> {
 		int tracingCapacity;
 
 	}
+
+	public static void main(String[] args) {
+		String[] args2 = new String[]{
+				"--setup", OpenBerlinBatch.class.getName(),
+				"--params", OpenBerlinBatch.Params.class.getName(),
+				"--threads", Integer.toString(4),
+				"--iterations", Integer.toString(360),
+				"--write-metadata"
+		};
+		RunParallel.main(args2 );
+	}
+
 
 
 }
