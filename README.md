@@ -46,7 +46,7 @@ This example will write a 10% sample into `output` that can be used in the subse
 
 ### Batch Runs
 
-The `BatchRun` class allows running one scenario many times with different a parametrization (possibly in parallel).
+The `BatchRun` class allows running one scenario many times with a different parametrization (possibly in parallel).
 
     java -jar matsim-episim-example-1.0-SNAPSHOT.jar runParallel \
         --setup org.matsim.episim.run.batch.OpenBerlinBatch \
