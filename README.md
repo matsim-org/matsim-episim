@@ -28,7 +28,7 @@ To run them you can create a standalone jar file with:
 
 and run it with (where `OpenBerlinScenario` is the name of the scenario you want to run):
 
-    java -jar matsim-episim-example-1.0-SNAPSHOT.jar --modules OpenBerlinScenario
+    java -jar matsim-episim-example-1.0-SNAPSHOT.jar --modules org.matsim.episim.run.modules.OpenBerlinScenario
     
 
 ### Generating mobility traces events file
@@ -42,6 +42,23 @@ Run `DownSampleScenario` to extract the necessary information:
         --population <Path to plans.xml> --events <Path to events.xml>
 
 This example will write a 10% sample into `output` that can be used in the subsequent steps.
+
+
+### Batch Runs
+
+The `BatchRun` class allows running one scenario many times with different a parametrization (possibly in parallel).
+
+    java -jar matsim-episim-example-1.0-SNAPSHOT.jar runParallel \
+        --setup org.matsim.episim.run.batch.OpenBerlinBatch \
+        --params org.matsim.episim.run.batch.OpenBerlinBatch$Params
+
+The `OpenBerlinBatch` class show how such a batch run can be defined. It is also possible prepare executable
+scripts for running the batch on a cluster.
+
+    java -jar matsim-episim-example-1.0-SNAPSHOT.jar createBattery \
+        --setup org.matsim.episim.run.batch.OpenBerlinBatch \
+        --params org.matsim.episim.run.batch.OpenBerlinBatch$Params
+
 
 ### Licenses
 
