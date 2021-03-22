@@ -27,6 +27,9 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.episim.EpisimConfigGroup;
 import org.matsim.episim.policy.FixedPolicy;
+import org.matsim.episim.policy.Restriction;
+
+import java.time.LocalDate;
 
 /**
  * Scenario based on the publicly available OpenBerlin scenario (https://github.com/matsim-scenarios/matsim-berlin).
@@ -68,7 +71,8 @@ public class OpenBerlinScenario extends AbstractModule {
 		Config config = ConfigUtils.createConfig(new EpisimConfigGroup());
 		EpisimConfigGroup episimConfig = ConfigUtils.addOrGetModule(config, EpisimConfigGroup.class);
 
-		config.network().setInputFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/input/berlin-v5-network.xml.gz");
+		// Optional network
+		// config.network().setInputFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-10pct/input/berlin-v5-network.xml.gz");
 
 		// String episimEvents_1pct = "../public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct-schools/output-berlin-v5.4-1pct-schools/berlin-v5.4-1pct-schools.output_events_for_episim.xml.gz";
 		// String episimEvents_1pct = "../public-svn/matsim/scenarios/countries/de/berlin/berlin-v5.4-1pct/output-berlin-v5.4-1pct/berlin-v5.4-1pct.output_events_for_episim.xml.gz";
@@ -78,6 +82,9 @@ public class OpenBerlinScenario extends AbstractModule {
 
 		episimConfig.setInputEventsFile(url);
 
+		LocalDate startDate = LocalDate.of(2020, 2, 20);
+
+		episimConfig.setStartDate(startDate);
 		episimConfig.setFacilitiesHandling(EpisimConfigGroup.FacilitiesHandling.bln);
 		episimConfig.setSampleSize(0.01);
 		episimConfig.setCalibrationParameter(2);
@@ -88,11 +95,11 @@ public class OpenBerlinScenario extends AbstractModule {
 		addDefaultParams(episimConfig);
 
 		episimConfig.setPolicy(FixedPolicy.class, FixedPolicy.config()
-				.shutdown(closingIteration, "leisure", "edu")
-				.restrict(closingIteration, 0.2, "work", "business", "other")
-				.restrict(closingIteration, 0.3, "shop", "errands")
-				.restrict(closingIteration, 0.5, "pt")
-				.open(closingIteration + 60, DEFAULT_ACTIVITIES)
+				.restrict(startDate.plusDays(closingIteration), Restriction.of(0.0), "leisure", "edu")
+				.restrict(startDate.plusDays(closingIteration), Restriction.of(0.2), "work", "business", "other")
+				.restrict(startDate.plusDays(closingIteration), Restriction.of(0.3), "shop", "errands")
+				.restrict(startDate.plusDays(closingIteration), Restriction.of(0.5), "pt")
+				.restrict(startDate.plusDays(closingIteration + 60), Restriction.none(), DEFAULT_ACTIVITIES)
 				.build()
 		);
 

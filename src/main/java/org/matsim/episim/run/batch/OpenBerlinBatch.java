@@ -36,9 +36,6 @@ public class OpenBerlinBatch implements BatchRun<OpenBerlinBatch.Params> {
 		Config config = module.config();
 		config.global().setRandomSeed(params.seed);
 
-		// Network file is not needed for this batch
-		config.network().setInputFile(null);
-
 		EpisimConfigGroup episimConfig = ConfigUtils.addOrGetModule(config, EpisimConfigGroup.class);
 
 		episimConfig.setCalibrationParameter(params.calibrationParameter);
