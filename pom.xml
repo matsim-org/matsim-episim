@@ -27,13 +27,6 @@
 
     <repositories>
 
-        <!-- Main repo for episim -->
-        <repository>
-            <id>github</id>
-            <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/matsim-org/matsim-episim-libs</url>
-        </repository>
-
         <!-- Repository for MATSim releases (MATSim is not on Maven central) -->
         <repository>
             <id>matsim</id>
@@ -88,7 +81,7 @@
 
     <dependencies>
 
-        <!-- This is the matsim "core": -->
+
         <dependency>
             <groupId>com.github.matsim-org</groupId>
             <artifactId>matsim-episim-libs</artifactId>
