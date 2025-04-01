@@ -20,7 +20,7 @@
     </licenses>
 
     <properties>
-        <episim.version>2025.1</episim.version>
+        <episim.version>v2025.1</episim.version>
         <java.version>11</java.version>
         <mainClass>org.matsim.run.RunEpisim</mainClass>
     </properties>
@@ -28,11 +28,11 @@
     <repositories>
 
         <!-- Main repo for episim -->
-        <repository>
-            <id>github</id>
-            <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/matsim-org/matsim-episim-libs</url>
-        </repository>
+<!--        <repository>-->
+<!--            <id>github</id>-->
+<!--            <name>GitHub Packages</name>-->
+<!--            <url>https://maven.pkg.github.com/matsim-org/matsim-episim-libs</url>-->
+<!--        </repository>-->
 
         <!-- Repository for MATSim releases (MATSim is not on Maven central) -->
         <repository>
