@@ -39,7 +39,6 @@
  import org.matsim.episim.model.testing.DefaultTestingModel;
  import org.matsim.episim.model.testing.TestingModel;
  import org.matsim.episim.model.vaccination.NoVaccination;
- import org.matsim.episim.model.vaccination.VaccinationByAge;
  import org.matsim.episim.model.vaccination.VaccinationModel;
  import org.matsim.episim.policy.FixedPolicy;
  import org.matsim.episim.policy.FixedPolicy.ConfigBuilder;
@@ -50,7 +49,6 @@
  import javax.inject.Singleton;
  import java.io.IOException;
  import java.io.UncheckedIOException;
- import java.nio.file.Path;
  import java.time.DayOfWeek;
  import java.time.LocalDate;
  import java.util.*;
@@ -61,7 +59,7 @@
  /**
   * Open Scenario for Cologne using Senozon events for different weekdays.
   */
- public final class SnzCologneOpenScenario extends AbstractModule {
+ public final class SnzCologneOpenProductionScenario extends AbstractModule {
 
 	 public enum DiseaseImport {yes, no}
 
@@ -91,11 +89,11 @@
 	  * Empty constructor is needed for running scenario from command line.
 	  */
 	 @SuppressWarnings("unused")
-	 private SnzCologneOpenScenario() {
+	 private SnzCologneOpenProductionScenario() {
 		 this(new Builder());
 	 }
 
-	 private SnzCologneOpenScenario(Builder builder) {
+	 private SnzCologneOpenProductionScenario(Builder builder) {
 		 this.diseaseImport = builder.diseaseImport;
 		 this.restrictions = builder.restrictions;
 		 this.masks = builder.masks;
@@ -497,8 +495,8 @@
 		 private final double householdSusc = 0.35;
 
 
-		 public SnzCologneOpenScenario build() {
-			 return new SnzCologneOpenScenario(this);
+		 public SnzCologneOpenProductionScenario build() {
+			 return new SnzCologneOpenProductionScenario(this);
 		 }
 
 		 public Builder setMasks(Masks masks) {

@@ -8,7 +8,7 @@ import org.matsim.episim.EpisimConfigGroup;
 import org.matsim.episim.VirusStrainConfigGroup;
 import org.matsim.episim.analysis.OutputAnalysis;
 import org.matsim.episim.model.InfectionModelWithAntibodies;
-import org.matsim.episim.run.modules.SnzCologneOpenScenario;
+import org.matsim.episim.run.modules.SnzCologneOpenProductionScenario;
 import org.matsim.run.RunParallel;
 
 import javax.annotation.Nullable;
@@ -35,9 +35,9 @@ public class StarterBatchOpenCologne implements BatchRun<StarterBatchOpenCologne
 	/*
 	 * here you select & modify models specified in the SnzCologneProductionScenario & SnzProductionScenario.
 	 */
-	private SnzCologneOpenScenario getBindings(Params params) {
-		return new SnzCologneOpenScenario.Builder()
-			.setMasks(params == null ? SnzCologneOpenScenario.Masks.yes : params.masks)
+	private SnzCologneOpenProductionScenario getBindings(Params params) {
+		return new SnzCologneOpenProductionScenario.Builder()
+			.setMasks(params == null ? SnzCologneOpenProductionScenario.Masks.yes : params.masks)
 			.setInfectionModel(InfectionModelWithAntibodies.class)
 			.build();
 	}
@@ -94,8 +94,8 @@ public class StarterBatchOpenCologne implements BatchRun<StarterBatchOpenCologne
 		@Parameter({1.0, 2.0})
 		public double thetaFactor;
 
-		@EnumParameter(SnzCologneOpenScenario.Masks.class)
-		public SnzCologneOpenScenario.Masks masks;
+		@EnumParameter(SnzCologneOpenProductionScenario.Masks.class)
+		public SnzCologneOpenProductionScenario.Masks masks;
 
 	}
 
