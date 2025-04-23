@@ -32,6 +32,6 @@ Welcome to the official documentation of **MATSim Episim**.
 
 This site guides you through installation, simulation setup, scenario configuration, and output analysis. Whether you're simulating for Berlin, Cologne, or another region, you'll find guidance here.
 
-📖 **Start exploring** by reading the [Introduction](/guide/introduction.html) or head straight into the [Quickstart](/guide/quickstart.html).
+**Start exploring** by reading the [Introduction](/guide/introduction.html) or head straight into the [Quickstart](/guide/quickstart.html).
 
-🧠 For scientific background, see [Müller 2020](https://doi.org/10.48550/arXiv.2011.11453) or check the [EpiSim GitHub Repository](https://github.com/matsim-org/matsim-episim).
+For scientific background, see [Müller 2020](https://doi.org/10.48550/arXiv.2011.11453) or check the [EpiSim GitHub Repository](https://github.com/matsim-org/matsim-episim).
