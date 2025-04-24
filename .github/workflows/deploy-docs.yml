@@ -19,8 +19,11 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install dependencies (pnpm)
+        run: |
+          corepack enable
+          corepack prepare pnpm@8.15.4 --activate
+          pnpm install
 
       - name: Build docs
         run: npm run build
