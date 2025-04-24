@@ -8,6 +8,9 @@ const require = createRequire(import.meta.url)
 const { searchPlugin } = require('@vuepress/plugin-search')
 
 export default defineUserConfig({
+
+  base: "/matsim-episim/",
+
   lang: 'en-US',
 
   title: 'Episim Documentation',
