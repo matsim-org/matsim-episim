@@ -1,3 +1,8 @@
 .DS_Store
 node_modules/
 dist/
+
+# VuePress source files under docs/.vuepress should stay tracked
+# (e.g. docs/.vuepress/config.js). Ignore only generated artifacts.
+docs/.vuepress/.temp/
+docs/.vuepress/.cache/
