@@ -23,6 +23,7 @@ const targetVersionDir = path.join(versionsDir, version)
 const targetDocDir = path.join(targetVersionDir, 'documentation')
 const targetHomeFile = path.join(targetVersionDir, 'README.md')
 const targetImagesDir = path.join(targetVersionDir, 'images')
+const rootHomeFile = path.join(docsDir, 'README.md')
 
 if (!fs.existsSync(versionsDir)) {
   console.error(`Missing versions directory: ${versionsDir}`)
@@ -76,6 +77,14 @@ if (fs.existsSync(sourceHomeFile)) {
     )
 
   fs.writeFileSync(targetHomeFile, content)
+}
+
+if (fs.existsSync(rootHomeFile)) {
+  let rootContent = fs.readFileSync(rootHomeFile, 'utf8')
+  rootContent = rootContent
+    .replace(/link:\s*\/versions\/[^/]+\/documentation\//g, `link: /versions/${version}/documentation/`)
+    .replace(/\]\(\/versions\/[^/]+\/documentation\//g, `](/versions/${version}/documentation/`)
+  fs.writeFileSync(rootHomeFile, rootContent)
 }
 
 console.log(

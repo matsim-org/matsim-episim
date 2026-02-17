@@ -4,11 +4,11 @@ title: MATSim Episim Documentation
 heroImage: https://www.ivt.ethz.ch/forschung/matsim/_jcr_content/par/fullwidthimage/image.imageformat.1286.2026935405.png
 actions:
   - text: Quickstart
-    link: /versions/2027/documentation/quickstart.html
+    link: /versions/v0.0.1/documentation/quickstart.html
     type: primary
 
   - text: Introduction
-    link: /versions/2027/documentation/introduction.html
+    link: /versions/v0.0.1/documentation/introduction.html
     type: secondary
 
 features:
@@ -32,6 +32,6 @@ Welcome to the official documentation of **MATSim Episim**.
 
 This site guides you through installation, simulation setup, scenario configuration, and output analysis. Whether you're simulating for Berlin, Cologne, or another region, you'll find guidance here.
 
-**Start exploring** by reading the [Introduction](/versions/2027/documentation/introduction.html) or head straight into the [Quickstart](/versions/2027/documentation/quickstart.html).
+**Start exploring** by reading the [Introduction](/versions/v0.0.1/documentation/introduction.html) or head straight into the [Quickstart](/versions/v0.0.1/documentation/quickstart.html).
 
 For scientific background, see [Müller 2020](https://doi.org/10.48550/arXiv.2011.11453) or check the [EpiSim GitHub Repository](https://github.com/matsim-org/matsim-episim).
