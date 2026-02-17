@@ -24,6 +24,62 @@ const targetDocDir = path.join(targetVersionDir, 'documentation')
 const targetHomeFile = path.join(targetVersionDir, 'README.md')
 const targetImagesDir = path.join(targetVersionDir, 'images')
 const rootHomeFile = path.join(docsDir, 'README.md')
+const disclaimerMarker = '<!-- AUTO-GENERATED-VERSION-DISCLAIMER -->'
+
+const collectMarkdownFiles = (dir) => {
+  if (!fs.existsSync(dir)) {
+    return []
+  }
+
+  const entries = fs.readdirSync(dir, { withFileTypes: true })
+  const files = []
+
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name)
+    if (entry.isDirectory()) {
+      files.push(...collectMarkdownFiles(fullPath))
+      continue
+    }
+    if (entry.isFile() && fullPath.endsWith('.md')) {
+      files.push(fullPath)
+    }
+  }
+
+  return files
+}
+
+const addDisclaimer = (filePath, newVersion, fromVersion) => {
+  const content = fs.readFileSync(filePath, 'utf8')
+  if (content.includes(disclaimerMarker)) {
+    return
+  }
+
+  const currentDate = new Date().toISOString().slice(0, 10)
+  const disclaimer = [
+    disclaimerMarker,
+    '> **Auto-generated version notice**',
+    `> This file was generated automatically for version \`${newVersion}\` from \`${fromVersion}\` on ${currentDate}.`,
+    '> Please review and adjust the content, then remove this notice manually.',
+    '',
+  ].join('\n')
+
+  // Preserve frontmatter at the top of the file, then inject the notice.
+  if (content.startsWith('---\n')) {
+    const closingIndex = content.indexOf('\n---\n', 4)
+    if (closingIndex !== -1) {
+      const frontmatterEnd = closingIndex + '\n---\n'.length
+      const updated =
+        content.slice(0, frontmatterEnd) +
+        '\n' +
+        disclaimer +
+        content.slice(frontmatterEnd)
+      fs.writeFileSync(filePath, updated)
+      return
+    }
+  }
+
+  fs.writeFileSync(filePath, `${disclaimer}${content}`)
+}
 
 if (!fs.existsSync(versionsDir)) {
   console.error(`Missing versions directory: ${versionsDir}`)
@@ -77,6 +133,12 @@ if (fs.existsSync(sourceHomeFile)) {
     )
 
   fs.writeFileSync(targetHomeFile, content)
+}
+
+for (const markdownFile of [...collectMarkdownFiles(targetDocDir), targetHomeFile]) {
+  if (fs.existsSync(markdownFile)) {
+    addDisclaimer(markdownFile, version, sourceVersion)
+  }
 }
 
 if (fs.existsSync(rootHomeFile)) {
