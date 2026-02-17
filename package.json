@@ -5,10 +5,11 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "vuepress build docs && mv docs/.vuepress/dist ./dist",
+    "build": "rm -rf ./dist && vuepress build docs && mv docs/.vuepress/dist ./dist",
     "clean-serve": "vuepress dev docs --clean-cache",
     "serve": "vuepress dev docs",
-    "update-package": "npx vp-update"
+    "update-package": "npx vp-update",
+    "version-docs": "node scripts/version-docs.mjs"
   },
   "devDependencies": {
     "@vuepress/bundler-vite": "^2.0.0-rc.20",
@@ -37,7 +38,6 @@
     "browserslist": "^4.24.4",
     "buffer-builder": "^0.2.0",
     "cac": "^6.7.14",
-    "caniuse-lite": "^1.0.30001715",
     "chalk": "^5.4.1",
     "cheerio": "^1.0.0",
     "cheerio-select": "^2.1.0",
