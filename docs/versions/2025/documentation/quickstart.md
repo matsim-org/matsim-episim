@@ -10,6 +10,6 @@ This approach targets programmers who are comfortable with Java and an IDE. In t
 
 4.  Check that you are using Java 11 (Navigate to File → Project Structure. Check that SDK matches Java 11)
 
-5.  Navigate to src/main/java/org/matsim/episim/run/batch/StarterBatchOpenCologne.java
+5.  Navigate to `src/main/java/org/matsim/episim/run/batch/StarterBatchOpenCologne.java`
 
 6.  Run File
