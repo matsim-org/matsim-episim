@@ -42,7 +42,6 @@
  import org.matsim.episim.model.vaccination.VaccinationByAge;
  import org.matsim.episim.model.vaccination.VaccinationModel;
  import org.matsim.episim.policy.FixedPolicy;
- import org.matsim.episim.policy.FixedPolicy.ConfigBuilder;
  import org.matsim.episim.policy.Restriction;
  import org.matsim.episim.policy.ShutdownPolicy;
  import org.matsim.vehicles.VehicleType;
@@ -62,6 +61,7 @@
   * Open Scenario for Cologne using Senozon events for different weekdays.
   */
  public final class SnzCologneOpenScenario extends AbstractModule {
+	 // (This extends from a guice AbstractModule, not from a matsim AbstractModule.)
 
 	 public enum DiseaseImport {yes, no}
 
@@ -92,6 +92,9 @@
 	  */
 	 @SuppressWarnings("unused")
 	 private SnzCologneOpenScenario() {
+		 /// yyyy what does it mean "running scenario from command line"?  Presumably, this means running it via {@link org.matsim.run.RunEpisim}
+		 ///  rather than via {@link org.matsim.run.RunParallel}.  Not clear if we need to maintain that second execution path.
+		 ///  Or alternatively, if the builder is the right way to go; it feels odd to me to pass class types via this builder rather than using guice directly.
 		 this(new Builder());
 	 }
 
@@ -126,12 +129,13 @@
 		 bind(HouseholdSusceptibility.Config.class).toInstance(
 			 HouseholdSusceptibility.newConfig().withSusceptibleHouseholds(householdSusc, 5.0)
 		 );
-
+		 // yy what is this?
 
 		 // antibody model
 		 AntibodyModel.Config antibodyConfig = new AntibodyModel.Config();
 		 antibodyConfig.setImmuneReponseSigma(3.0);
 		 bind(AntibodyModel.Config.class).toInstance(antibodyConfig);
+		 // yy is it necessary to bind to an instance rather than a class?
 
 
 		 Multibinder<SimulationListener> listener = Multibinder.newSetBinder(binder(), SimulationListener.class);
@@ -143,6 +147,7 @@
 
 	 @Provides
 	 @Singleton
+	 // The following is a matsim-type config in code.  It is a bit more flexible/powerful than what we are used to in standard matsim.
 	 public Config config() {
 
 		 double cologneFactor = 0.5; // Cologne model has about half as many agents as Berlin model, -> 2_352_480
@@ -214,17 +219,17 @@
 		 activityParticipation.setLeisureAsNightly(this.leisureNightly);
 		 activityParticipation.setNightlyScale(this.leisureNightlyScale);
 
-		 ConfigBuilder builder;
+		 FixedPolicy.ConfigBuilder fixedPolicyConfigBuilder;
 		 try {
-			 builder = activityParticipation.createPolicy();
+			 fixedPolicyConfigBuilder = activityParticipation.createPolicy();
 		 } catch (IOException e1) {
 			 throw new UncheckedIOException(e1);
 		 }
-		 builder.setHospitalScale(this.scale);
+		 fixedPolicyConfigBuilder.setHospitalScale(this.scale);
 
 		 // school lockdown
-		 builder.restrict(LocalDate.parse("2020-03-16"), 0.2, "educ_primary", "educ_kiga", "educ_secondary", "educ_higher", "educ_tertiary", "educ_other");
-		 builder.restrict(LocalDate.parse("2020-04-27"), 0.5, "educ_primary", "educ_kiga", "educ_secondary", "educ_tertiary", "educ_other");
+		 fixedPolicyConfigBuilder.restrict(LocalDate.parse("2020-03-16"), 0.2, "educ_primary", "educ_kiga", "educ_secondary", "educ_higher", "educ_tertiary", "educ_other");
+		 fixedPolicyConfigBuilder.restrict(LocalDate.parse("2020-04-27"), 0.5, "educ_primary", "educ_kiga", "educ_secondary", "educ_tertiary", "educ_other");
 
 
 		 //leisure & work factor
@@ -232,8 +237,8 @@
 
 			 BiFunction<LocalDate, Double, Double> workVacFactor = (d, rf) -> rf * 0.92;
 
-			 builder.applyToRf("2020-04-03", "2020-04-17", workVacFactor, "work", "business");
-			 builder.applyToRf("2020-06-26", "2020-08-07", workVacFactor, "work", "business");
+			 fixedPolicyConfigBuilder.applyToRf("2020-04-03", "2020-04-17", workVacFactor, "work", "business");
+			 fixedPolicyConfigBuilder.applyToRf("2020-06-26", "2020-08-07", workVacFactor, "work", "business");
 		 }
 
 		 //---------------------------------------
@@ -249,7 +254,7 @@
 				 double ffpFraction = 1. / 3. * 0.9;
 				 double surgicalFraction = 1. / 3. * 0.9;
 
-				 builder.restrict(date, Restriction.ofMask(Map.of(
+				 fixedPolicyConfigBuilder.restrict(date, Restriction.ofMask(Map.of(
 						 FaceMask.CLOTH, clothFraction * ii / 14,
 						 FaceMask.N95, ffpFraction * ii / 14,
 						 FaceMask.SURGICAL, surgicalFraction * ii / 14)),
@@ -257,13 +262,13 @@
 			 }
 
 			 for (LocalDate date = LocalDate.parse("2020-04-21"); date.isBefore(LocalDate.parse("2021-05-01")); date = date.plusDays(1)) {
-				 builder.restrict(date, Restriction.ofMask(Map.of(FaceMask.CLOTH, 0.45, FaceMask.SURGICAL, 0.45)), "pt", "errands", "shop_daily", "shop_other");
+				 fixedPolicyConfigBuilder.restrict(date, Restriction.ofMask(Map.of(FaceMask.CLOTH, 0.45, FaceMask.SURGICAL, 0.45)), "pt", "errands", "shop_daily", "shop_other");
 			 }
 
 		 }
 
 
-		 episimConfig.setPolicy(builder.build());
+		 episimConfig.setPolicy(fixedPolicyConfigBuilder.build());
 
 
 		 //---------------------------------------
@@ -283,6 +288,7 @@
 
 	 @Provides
 	 @Singleton
+	 // this is more or less the typical matsim scenario container
 	 public Scenario scenario(Config config) {
 
 		 // guice will use no args constructor by default, we check if this config was initialized
@@ -502,11 +508,13 @@
 		 }
 
 		 public Builder setMasks(Masks masks) {
+			 // yyyy to me, it does not feel right to use guice bindings, and then to have this setter "on top".  kai, mar'26
 			 this.masks = masks;
 			 return this;
 		 }
 
 		 public Builder setInfectionModel(Class<? extends InfectionModel> infectionModel) {
+			 // yyyy to me, it does not feel right to use guice bindings, and then to have this setter "on top".  kai, mar'26
 			 this.infectionModel = infectionModel;
 			 return this;
 		 }
