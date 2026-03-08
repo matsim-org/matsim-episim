@@ -20,6 +20,7 @@ import java.util.List;
  * boilerplate batch for cologne
  */
 public class StarterBatchOpenCologne implements BatchRun<StarterBatchOpenCologne.Params> {
+	// yyyyyy could we please have a regression test around this here?
 
 	/*
 	 * here you can swap out vaccination model, antibody model, etc.
@@ -36,6 +37,8 @@ public class StarterBatchOpenCologne implements BatchRun<StarterBatchOpenCologne
 	 * here you select & modify models specified in the SnzCologneProductionScenario & SnzProductionScenario.
 	 */
 	private SnzCologneOpenScenario getBindings(Params params) {
+		// (this is a separate private method since it actually needs to be used consistently in two different places :-(.
+		// In one case, only the config is needed.  In the other case, the bindings are needed, possibly including the config.)
 		return new SnzCologneOpenScenario.Builder()
 			.setMasks(params == null ? SnzCologneOpenScenario.Masks.yes : params.masks)
 			.setInfectionModel(InfectionModelWithAntibodies.class)
@@ -43,7 +46,7 @@ public class StarterBatchOpenCologne implements BatchRun<StarterBatchOpenCologne
 	}
 
 	/*
-	 * Metadata is needed for covid-sim.
+	 * Metadata is needed for covid-sim website (www.covid-sim.info)
 	 */
 	@Override
 	public Metadata getMetadata() {
@@ -114,6 +117,9 @@ public class StarterBatchOpenCologne implements BatchRun<StarterBatchOpenCologne
 		};
 
 		RunParallel.main(args2);
+		// (RunParallel is central infrastructure.  It will (I guess):
+		// * take the "main" class from OPTION_SETUP.  In the case here, this is the present class.
+		// * ...
 	}
 
 }
