@@ -44,6 +44,7 @@
  import org.matsim.episim.policy.FixedPolicy;
  import org.matsim.episim.policy.Restriction;
  import org.matsim.episim.policy.ShutdownPolicy;
+ import org.matsim.episim.run.batch.StarterBatchOpenCologne;
  import org.matsim.vehicles.VehicleType;
 
  import javax.inject.Singleton;
@@ -95,6 +96,9 @@
 		 /// yyyy what does it mean "running scenario from command line"?  Presumably, this means running it via {@link org.matsim.run.RunEpisim}
 		 ///  rather than via {@link org.matsim.run.RunParallel}.  Not clear if we need to maintain that second execution path.
 		 ///  Or alternatively, if the builder is the right way to go; it feels odd to me to pass class types via this builder rather than using guice directly.
+
+		 // --> an advantage of using the builder is that we do not need to use the overridingModule dialect of matsim. kai, mar'26
+
 		 this(new Builder());
 	 }
 
@@ -116,6 +120,13 @@
 
 	 @Override
 	 protected void configure() {
+		 /// since this is a guice {@link AbstractModule}, we do not have access to the config.
+		 /// yy Not sure if we want to leave it this way.  If not, what would be the alternative?
+
+		 /// yyyy this actually begs the question how the config enters the model
+		 /// --> The {@link #config()} method is annotated with @Provides!
+		 ///  Which means that modules such as {@link AntibodyModel} or {@link HouseholdSusceptibility} could actually access
+		 ///  the standard config.  The only thing we cannot do is to base bindings on the config.
 
 		 bind(ContactModel.class).to(SymmetricContactModel.class).in(Singleton.class);
 		 bind(DiseaseStatusTransitionModel.class).to(AgeDependentDiseaseStatusTransitionModel.class).in(Singleton.class);
@@ -126,21 +137,26 @@
 		 bind(DiseaseStatusTransitionModel.class).to(AgeDependentDiseaseStatusTransitionModel.class).in(Singleton.class);
 		 bind(ActivityParticipationModel.class).to(DefaultParticipationModel.class);
 
-		 bind(HouseholdSusceptibility.Config.class).toInstance(
-			 HouseholdSusceptibility.newConfig().withSusceptibleHouseholds(householdSusc, 5.0)
-		 );
-		 // yy what is this?
+		 // The following contains two different ways to use ad-hoc configs.
+		 // yyyy IMO, both should be changed to regular matsim config groups.
 
-		 // antibody model
 		 AntibodyModel.Config antibodyConfig = new AntibodyModel.Config();
 		 antibodyConfig.setImmuneReponseSigma(3.0);
 		 bind(AntibodyModel.Config.class).toInstance(antibodyConfig);
 		 // yy is it necessary to bind to an instance rather than a class?
+		 // --> because of config
+		 /// yyyyyy This binds the config but where is the implementation of  {@link Antibody Model}? {@link EpisimModule} binds it,
+		 /// but is that really used from here?
+		 /// --> {@link RunEpisim} uses the usual guice override syntax, and overrides the standard bindings with those given here.
+		 /// There is also a long comment underneath that is asking if this is really what we want.
+		 /// {@link org.matsim.run.RunParallel} acutally does the same.
 
-
-		 Multibinder<SimulationListener> listener = Multibinder.newSetBinder(binder(), SimulationListener.class);
-
-		 listener.addBinding().to(HouseholdSusceptibility.class);
+		 bind(HouseholdSusceptibility.Config.class).toInstance( HouseholdSusceptibility.newConfig().withSusceptibleHouseholds(householdSusc, 5.0) );
+		 // yy what is this?
+		 // --> Instead of having a matsim config group, this has an ad-hoc config (group) inside the class.  And instead of generating an instance of the class and
+		 // configuring it via the constructor (see below), it is configured by binding this ad-hoc config.
+		 // --> yyyy Tendency to reconstruct this as an ad-hoc matsim config group.
+		 Multibinder.newSetBinder(binder(), SimulationListener.class).addBinding().to(HouseholdSusceptibility.class );
 
 
 	 }
@@ -149,6 +165,9 @@
 	 @Singleton
 	 // The following is a matsim-type config in code.  It is a bit more flexible/powerful than what we are used to in standard matsim.
 	 public Config config() {
+		 /// yy this is only used once, in {@link org.matsim.episim.run.batch.StarterBatchOpenCologne#prepareConfig(int, StarterBatchOpenCologne.Params)}.
+		 ///  Problem is that prepareConfig only has Params as agument, and from there somehow needs to obtain this config method.
+		 ///  Is there really no more direct way of doing this?
 
 		 double cologneFactor = 0.5; // Cologne model has about half as many agents as Berlin model, -> 2_352_480
 
@@ -188,24 +207,19 @@
 
 		 episimConfig.setProgressionConfig(progressionConfig(Transition.config()).build());
 
-
 		 //---------------------------------------
 		 //		I M P O R T
 		 //---------------------------------------
 		 episimConfig.setInitialInfections(Integer.MAX_VALUE);
 		 if (this.diseaseImport != DiseaseImport.no) {
-
 			 configureDiseaseImport(cologneFactor, episimConfig);
-
 		 }
-
 
 		 //----------------------------------------------------------------------------
 		 //		C O N T A C T     I N T E N S I T Y    /    S E A S O N A L I T Y
 		 //----------------------------------------------------------------------------
 
 		 configureContactIntensitiesAndSeasonality(episimConfig);
-
 
 		 //----------------------------------------------------------------------------
 		 //		R E S T R I C T I O N S  /  C O N T A C T    R E D U C T I O N
@@ -262,29 +276,23 @@
 			 }
 
 			 for (LocalDate date = LocalDate.parse("2020-04-21"); date.isBefore(LocalDate.parse("2021-05-01")); date = date.plusDays(1)) {
-				 fixedPolicyConfigBuilder.restrict(date, Restriction.ofMask(Map.of(FaceMask.CLOTH, 0.45, FaceMask.SURGICAL, 0.45)), "pt", "errands", "shop_daily", "shop_other");
+				 fixedPolicyConfigBuilder.restrict(date,
+					 Restriction.ofMask(Map.of(FaceMask.CLOTH, 0.45, FaceMask.SURGICAL, 0.45)), "pt", "errands", "shop_daily", "shop_other");
 			 }
 
 		 }
 
-
 		 episimConfig.setPolicy(fixedPolicyConfigBuilder.build());
-
 
 		 //---------------------------------------
 		 //		T R A C I N G
 		 //---------------------------------------
 
-
 		 if (this.tracing == Tracing.yes) {
-
 			 configureTracing(config, cologneFactor);
-
 		 }
-
 		 return config;
 	 }
-
 
 	 @Provides
 	 @Singleton
@@ -308,6 +316,9 @@
 
 		 return scenario;
 	 }
+
+	 // yyyy some of the now following static methods are public.  If they are public, it implies that they should be generally useful.
+	 // --> If they are generally useful, they should be moved to the central library.  Will make the private for the time being.
 
 	 private static void configureVehicleCapacities(Scenario scenario, double capFactor) {
 		 for (VehicleType vehicleType : scenario.getVehicles().getVehicleTypes().values()) {
@@ -351,10 +362,7 @@
 		 }
 	 }
 
-	 /**
-	  * Configure default contact intensities.
-	  */
-	 public static void configureContactIntensitiesAndSeasonality(EpisimConfigGroup episimConfig) {
+	 private static void configureContactIntensitiesAndSeasonality(EpisimConfigGroup episimConfig) {
 		 int spaces = 20;
 
 		 double workCiMod = 0.75;
@@ -388,7 +396,9 @@
 	  *
 	  * @param factor scale for tracing capacity
 	  */
-	 public static void configureTracing(Config config, double factor) {
+	 private static void configureTracing(Config config, double factor) {
+		 // yyyy The "factor" looks like an ad-hoc device to modify the magic number of "200" to "100" for the Cologne scenario.  Not good; find other solution.
+		 // Also, not clear why this exists at all since this (now???) seems to be a method separate from the Berlin code.
 
 		 TracingConfigGroup tracingConfig = ConfigUtils.addOrGetModule(config, TracingConfigGroup.class);
 		 //			int offset = (int) (ChronoUnit.DAYS.between(episimConfig.getStartDate(), LocalDate.parse("2020-04-01")) + 1);
@@ -409,7 +419,6 @@
 		 ));
 
 	 }
-
 
 	 private void configureDiseaseImport(double cologneFactor, EpisimConfigGroup episimConfig) {
 
@@ -440,7 +449,7 @@
 
 	 }
 
-	 public static void interpolateImport(Map<LocalDate, Integer> importMap, double importFactor, LocalDate start, LocalDate end, double a, double b) {
+	 private static void interpolateImport(Map<LocalDate, Integer> importMap, double importFactor, LocalDate start, LocalDate end, double a, double b) {
 		 int days = end.getDayOfYear() - start.getDayOfYear();
 		 for (int i = 1; i <= days; i++) {
 			 double fraction = (double) i / days;
@@ -448,10 +457,7 @@
 		 }
 	 }
 
-	 /**
-	  * Adds progression config to the given builder.
-	  */
-	 static Transition.Builder progressionConfig(Transition.Builder builder) {
+	 private static Transition.Builder progressionConfig(Transition.Builder builder) {
 
 		 return builder
 			 // Inkubationszeit: Die Inkubationszeit [ ... ] liegt im Mittel (Median) bei 5–6 Tagen (Spannweite 1 bis 14 Tage)
@@ -488,6 +494,9 @@
 
 
 	 public static class Builder {
+		 // matsim-episim, other than matsim, uses plain guice.  For that, all required bindings need to be satisfied.  To support this, classes such as this one here,
+		 // have the guice-configure method, which satisfies those requirements.  The Builder then makes these (partially) configurable ... if additional configurability
+		 // is required, then this builder needs to be made more flexible.  kai, mar'26
 
 		 DiseaseImport diseaseImport = DiseaseImport.yes;
 		 Restrictions restrictions = Restrictions.yes;
@@ -501,7 +510,6 @@
 
 		 private final double leisureNightlyScale = 1.0;
 		 private final double householdSusc = 0.35;
-
 
 		 public SnzCologneOpenScenario build() {
 			 return new SnzCologneOpenScenario(this);

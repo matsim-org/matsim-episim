@@ -20,7 +20,8 @@
     </licenses>
 
     <properties>
-        <episim.version>v2025.1</episim.version>
+<!--	    <episim.version>v2025.1</episim.version>-->
+	    <episim.version>2025.1-SNAPSHOT</episim.version>
         <java.version>11</java.version>
         <mainClass>org.matsim.run.RunEpisim</mainClass>
     </properties>
