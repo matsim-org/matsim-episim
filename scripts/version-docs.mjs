@@ -1,3 +1,5 @@
+// I *think* that this script is there to auto-generate the documentation for a following year.  kai, jun'26
+
 import fs from 'fs'
 import path from 'path'
 import process from 'process'
