@@ -22,11 +22,13 @@
  import com.google.inject.AbstractModule;
  import com.google.inject.Provides;
  import com.google.inject.multibindings.Multibinder;
+ import jakarta.inject.Singleton;
  import org.matsim.api.core.v01.Scenario;
  import org.matsim.core.config.Config;
  import org.matsim.core.config.ConfigUtils;
  import org.matsim.core.config.groups.VspExperimentalConfigGroup;
  import org.matsim.core.controler.ControlerUtils;
+ import org.matsim.core.controler.ControllerUtils;
  import org.matsim.core.scenario.ScenarioUtils;
  import org.matsim.episim.*;
  import org.matsim.episim.model.*;
@@ -46,7 +48,7 @@
  import org.matsim.episim.policy.ShutdownPolicy;
  import org.matsim.vehicles.VehicleType;
 
- import javax.inject.Singleton;
+
  import java.io.IOException;
  import java.io.UncheckedIOException;
  import java.time.DayOfWeek;
@@ -154,7 +156,7 @@
 
 		 config.plans().setInputFile("https://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/de/episim/openDataModel/cologne/input/cologne_snz_entirePopulation_emptyPlans_withDistricts_25pt_split_grid.xml.gz");
 
-		 config.controler().setOutputDirectory("output-snzOpenCologne-25%");
+		 config.controller().setOutputDirectory("output-snzOpenCologne-25%");
 
 		 //episim config
 		 EpisimConfigGroup episimConfig = ConfigUtils.addOrGetModule(config, EpisimConfigGroup.class);
@@ -290,7 +292,7 @@
 
 		 config.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
 
-		 ControlerUtils.checkConfigConsistencyAndWriteToLog(config, "before loading scenario");
+		 ControllerUtils.checkConfigConsistencyAndWriteToLog(config, "before loading scenario");
 
 		 final Scenario scenario = ScenarioUtils.loadScenario(config);
 
