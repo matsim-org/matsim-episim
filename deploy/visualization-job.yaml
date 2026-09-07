@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: episim-batch-001-runs
+data:
+  runs.json: |
+    {
+      "runs": [
+        "seed_4711-gamma_0p8-masks_yes",
+        "seed_4712-gamma_0p8-masks_yes"
+      ]
+    }
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: episim-batch-001-visualization
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: episim-visualization
+          image: europe-west3-docker.pkg.dev/PROJECT_ID/episim/runner:poc
+          args:
+            - visualize
+            - --runs-file=/etc/episim-batch/runs.json
+            - --source-svn-url=https://svn.example.org/repos/episim/results/batch-001
+            - --target-svn-url=https://svn.example.org/repos/episim/visualizations
+            - --visualization-id=batch-001
+            - --district=Köln
+          resources:
+            requests:
+              cpu: "4"
+              memory: 16Gi
+              ephemeral-storage: 50Gi
+            limits:
+              cpu: "4"
+              memory: 16Gi
+              ephemeral-storage: 50Gi
+          volumeMounts:
+            - name: run-manifest
+              mountPath: /etc/episim-batch
+              readOnly: true
+            - name: svn-credentials
+              mountPath: /var/run/secrets/episim
+              readOnly: true
+            - name: work
+              mountPath: /work
+      volumes:
+        - name: run-manifest
+          configMap:
+            name: episim-batch-001-runs
+        - name: svn-credentials
+          secret:
+            secretName: episim-svn-credentials
+            defaultMode: 0440
+        - name: work
+          emptyDir:
+            sizeLimit: 50Gi

@@ -1,0 +1,16 @@
+FROM eclipse-temurin:25-jre-noble
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates subversion \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --gid 10001 episim \
+    && useradd --uid 10001 --gid 10001 --create-home episim \
+    && mkdir -p /app /work \
+    && chown -R 10001:10001 /app /work
+
+COPY matsim-episim-*.jar /app/episim.jar
+
+USER 10001:10001
+WORKDIR /work
+
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=85", "-cp", "/app/episim.jar", "org.matsim.episim.run.EpisimContainerEntrypoint"]

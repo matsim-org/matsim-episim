@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: episim-seed-4711-gamma-08
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: episim
+          image: europe-west3-docker.pkg.dev/PROJECT_ID/episim/runner:poc
+          args:
+            - run
+            - --seed=4711
+            - --gamma=0.8
+            - --iterations=10
+            - --run-id=seed_4711-gamma_0p8-masks_yes
+            - --svn-url=https://svn.example.org/repos/episim/results/batch-001
+          resources:
+            requests:
+              cpu: "8"
+              memory: 32Gi
+            limits:
+              cpu: "8"
+              memory: 32Gi
+          volumeMounts:
+            - name: svn-credentials
+              mountPath: /var/run/secrets/episim
+              readOnly: true
+      volumes:
+        - name: svn-credentials
+          secret:
+            secretName: episim-svn-credentials
+            defaultMode: 0440

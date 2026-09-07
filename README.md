@@ -59,6 +59,89 @@ scripts for running the batch on a cluster:
         --setup org.matsim.episim.run.batch.OpenBerlinBatch \
         --params org.matsim.episim.run.batch.OpenBerlinBatch$Params
 
+### Single variant runner
+
+`EpisimVariantRunner` executes exactly one Cologne variant and publishes the result as one SVN revision. The
+`gamma` argument is applied as a multiplier to the scenario calibration parameter. Credentials are read from files;
+the password is passed to the SVN client over standard input and is neither stored in the command line nor cached.
+
+    java -cp matsim-episim-*.jar org.matsim.episim.run.EpisimVariantRunner \
+        --seed 4711 \
+        --gamma 0.8 \
+        --iterations 10 \
+        --svn-url https://svn.example.org/repos/episim/results/batch-001 \
+        --svn-username-file /secure/svn-username \
+        --svn-password-file /secure/svn-password
+
+Each run is published below the supplied URL using a directory such as `seed_4711-gamma_0p8-masks_yes`. Dots are
+not used in run IDs because MATSim post-processing treats the first dot as the end of the output prefix. The directory contains
+the stable request, execution metadata, resolved MATSim config, zipped simulation output, and a `_SUCCESS` marker.
+Re-running the same request is safe: an identical published request is accepted, while a conflicting request fails.
+
+To build the runner image, first package the application and then build the runtime-only image:
+
+    mvn package
+    docker build -f Dockerfile.runner -t episim-runner:poc .
+
+The same image exposes two operations. Run one simulation variant with `run` (the credentials directory contains
+files named `svn-username` and `svn-password`):
+
+    docker run --rm \
+        --mount type=bind,source=$HOME/.config/episim-runner,target=/var/run/secrets/episim,readonly \
+        episim-runner:poc run \
+        --seed 4711 \
+        --gamma 0.8 \
+        --iterations 10 \
+        --svn-url https://svn.example.org/repos/episim/results/batch-001
+
+After all variants complete, create a JSON manifest containing exactly the immutable SVN run directories to collect:
+
+    {
+      "runs": [
+        "seed_4711-gamma_0p8-masks_yes",
+        "seed_4712-gamma_0p8-masks_yes"
+      ]
+    }
+
+Then collect, pack, and publish the visualization with `visualize`:
+
+    docker run --rm \
+        --mount type=bind,source=$HOME/.config/episim-runner,target=/var/run/secrets/episim,readonly \
+        --mount type=bind,source=/absolute/path/to/runs.json,target=/etc/episim-batch/runs.json,readonly \
+        episim-runner:poc visualize \
+        --runs-file /etc/episim-batch/runs.json \
+        --source-svn-url https://svn.example.org/repos/episim/results/batch-001 \
+        --target-svn-url https://svn.example.org/repos/episim/visualizations \
+        --visualization-id batch-001 \
+        --district Köln
+
+Only runs from the manifest are downloaded. Every run must contain `_SUCCESS`, and the final viewer directory is
+published in a single SVN revision. By default, seeds with equal gamma, iteration, and mask parameters are averaged;
+add `--keep-seeds` to retain each seed as a separate viewer run.
+
+The Kubernetes Secret must contain keys named `svn-username` and `svn-password`. Kubernetes examples are available
+in `deploy/variant-job.yaml` and `deploy/visualization-job.yaml`.
+
+For a local matrix, `scripts/publish-visualization-matrix.sh` starts one calculation container for every item in the
+Cartesian product of seeds, gammas, and masks. After all calculations are successfully published to SVN, it creates
+`runs.json`, starts the visualization container, and publishes the final viewer package. Use `--parallel` to control
+how many heavy calculations run simultaneously:
+
+    ./scripts/publish-visualization-matrix.sh \
+        --seeds 4711,4712 \
+        --gammas 0.8,1.0 \
+        --masks yes,no \
+        --iterations 10 \
+        --parallel 2 \
+        --run-memory 8g \
+        --run-cpus 1 \
+        --source-svn-url https://svn.example.org/repos/episim/results/batch-001 \
+        --target-svn-url https://svn.example.org/repos/episim/visualizations \
+        --visualization-id batch-001
+
+The same flow can be orchestrated and monitored with a local Apache Airflow instance. See
+[`airflow/README.md`](airflow/README.md) for the Docker Compose setup and the parameterized `episim_local_matrix` DAG.
+
 
 ### Licenses
 

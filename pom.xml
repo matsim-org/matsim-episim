@@ -22,6 +22,7 @@
     <properties>
         <episim.version>2026.1-develop-28.08.26.-vis</episim.version>
         <java.version>25</java.version>
+        <junit.version>5.11.4</junit.version>
         <mainClass>org.matsim.run.RunEpisim</mainClass>
     </properties>
 
@@ -95,6 +96,13 @@
             <version>${episim.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -131,7 +139,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.2</version>
+                <version>3.6.2</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -188,7 +196,8 @@
                                     </includes>
                                 </filter>
                             </filters>
-                            <minimizeJar>true</minimizeJar>
+                            <!-- GeoTools/ImageN loads operation classes by name from registry files. -->
+                            <minimizeJar>false</minimizeJar>
                         </configuration>
                     </execution>
                 </executions>
@@ -228,7 +237,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version>
                 <configuration>
-                    <executable>java</executable>
+                    <executable>${java.home}/bin/java</executable>
                     <arguments>
                         <argument>-Dpicocli.autocomplete.systemExitOnError</argument>
                         <argument>-cp</argument>
