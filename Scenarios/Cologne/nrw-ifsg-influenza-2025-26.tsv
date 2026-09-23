@@ -1,0 +1,43 @@
+# Weekly laboratory-confirmed influenza notifications (IfSG), Nordrhein-Westfalen (Region_Id 05), all ages (00+).
+# Source: Robert Koch-Institut, "Laborbestätigte Influenzafälle in Deutschland" (version 2026-09-17), CC BY 4.0,
+#   https://github.com/robert-koch-institut/Influenzafaelle_in_Deutschland,
+#   file IfSG_Influenzafaelle.tsv at commit 25cf2a0886785c8b5af720c815966af068baf248, retrieved 2026-09-23T12:13:44Z.
+# week = ISO reporting week (Meldewoche: the week the health office learned of the case); cases = Fallzahl.
+# Drives the shape of the influenza import in GenerateInfluenzaConfig; weeks 2025-W38 and 2026-W21 only serve the smoothing.
+week	cases
+2025-W38	28
+2025-W39	41
+2025-W40	39
+2025-W41	78
+2025-W42	74
+2025-W43	70
+2025-W44	63
+2025-W45	106
+2025-W46	106
+2025-W47	177
+2025-W48	336
+2025-W49	630
+2025-W50	1193
+2025-W51	1433
+2025-W52	1047
+2026-W01	1839
+2026-W02	3472
+2026-W03	3574
+2026-W04	3212
+2026-W05	3910
+2026-W06	4085
+2026-W07	4077
+2026-W08	2976
+2026-W09	2699
+2026-W10	1208
+2026-W11	566
+2026-W12	299
+2026-W13	183
+2026-W14	140
+2026-W15	138
+2026-W16	71
+2026-W17	39
+2026-W18	27
+2026-W19	37
+2026-W20	30
+2026-W21	15

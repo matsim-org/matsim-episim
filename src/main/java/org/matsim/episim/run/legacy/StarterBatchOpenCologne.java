@@ -1,4 +1,4 @@
-package org.matsim.episim.run.batch;
+package org.matsim.episim.run.legacy;
 
 import com.google.inject.Module;
 import org.matsim.core.config.Config;
@@ -15,7 +15,6 @@ import org.matsim.episim.analysis.SecondaryAttackRateFromEvents;
 import org.matsim.episim.analysis.VaccinationEffectiveness;
 import org.matsim.episim.analysis.VaccinationEffectivenessFromPotentialInfections;
 import org.matsim.episim.model.InfectionModelWithAntibodies;
-import org.matsim.episim.run.modules.SnzCologneOpenProductionScenario;
 import org.matsim.run.BatchOutputPacker;
 import org.matsim.run.RunParallel;
 import picocli.CommandLine;

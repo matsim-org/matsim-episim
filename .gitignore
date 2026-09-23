@@ -287,3 +287,5 @@ testoutput*
 theta*
 2020-*
 triang*
+/scripts/
+/airflow/

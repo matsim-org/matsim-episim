@@ -17,7 +17,7 @@
   *                                                                         *
   * *********************************************************************** */
 
- package org.matsim.episim.run.modules;
+ package org.matsim.episim.run.legacy;
 
  import com.google.inject.AbstractModule;
  import com.google.inject.Provides;
@@ -60,6 +60,10 @@
 
  /**
   * Open Scenario for Cologne using Senozon events for different weekdays.
+  *
+  * <p>Legacy COVID-19 scenario, kept here as the base Cologne setup (input files, contact
+  * intensities, seasonality, vehicle capacities) that {@code org.matsim.episim.run.modules.InfluenzaCologneScenario}
+  * builds on. Not actively maintained on the Influenza branch.</p>
   */
  public final class SnzCologneOpenProductionScenario extends AbstractModule {
 
@@ -130,7 +134,7 @@
 
 		 // antibody model
 		 AntibodyModel.Config antibodyConfig = new AntibodyModel.Config();
-		 antibodyConfig.setImmuneReponseSigma(3.0);
+		 antibodyConfig.setImmuneResponseSigma(3.0);
 		 bind(AntibodyModel.Config.class).toInstance(antibodyConfig);
 
 

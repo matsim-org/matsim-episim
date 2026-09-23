@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.matsim-org</groupId>
     <artifactId>matsim-episim</artifactId>
-    <version>2026.1-develop-28.08.26.</version>
+    <version>2027-SNAPSHOT-22.09.26</version>
 
     <name>MATSim Episim Example</name>
     <description>Epidemic simulation for MATSim</description>
@@ -20,7 +20,7 @@
     </licenses>
 
     <properties>
-        <episim.version>2026.1-develop-28.08.26.-vis</episim.version>
+        <episim.version>2027-SNAPSHOT-23.09.26-2</episim.version>
         <java.version>25</java.version>
         <mainClass>org.matsim.run.RunEpisim</mainClass>
     </properties>
@@ -84,6 +84,19 @@
             <url>https://mvnrepository.com/artifact/tech.tablesaw/tablesaw-core</url>
         </repository>
 
+        <repository>
+            <id>episim-snapshot-repository-snapshots</id>
+            <name>Episim Snapshot Repository</name>
+            <url>https://maven.episim.info/snapshots</url>
+        </repository>
+
+        <!-- versions such as 2027-SNAPSHOT-23.09.26-2 do not end in -SNAPSHOT, so matsim-episim-libs deploys them here -->
+        <repository>
+            <id>episim-repository-releases</id>
+            <name>Episim Release Repository</name>
+            <url>https://maven.episim.info/releases</url>
+        </repository>
+
     </repositories>
 
     <dependencies>
@@ -131,7 +144,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.2</version>
+                <!-- 3.2.2 carries an ASM that cannot read the class files of matsim-episim-libs, which is compiled
+                     for Java 25; this is the version that module itself uses -->
+                <version>3.6.2</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -228,7 +243,8 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version>
                 <configuration>
-                    <executable>java</executable>
+                    <!-- the java on PATH may be older than the one Maven runs on, and would not load these classes -->
+                    <executable>${java.home}/bin/java</executable>
                     <arguments>
                         <argument>-Dpicocli.autocomplete.systemExitOnError</argument>
                         <argument>-cp</argument>
