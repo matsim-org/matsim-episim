@@ -34,14 +34,21 @@ public class SensitivityInfluenzaCologne extends InfluenzaCologneBatch<Sensitivi
 		VirusStrainConfigGroup.StrainParams strain = ConfigUtils.addOrGetModule(config, VirusStrainConfigGroup.class)
 			.getParams(INFLUENZA_STRAIN);
 		strain.setInfectiousness(params.infectiousness);
+		setElderlySusceptibility(strain, params.elderlySusceptibility);
+		return config;
+	}
 
+	/**
+	 * Sets the susceptibility of persons aged 60 and over to {@code factor}, as a step with keys at 59 (1.0) and 60,
+	 * see the class javadoc.
+	 */
+	static void setElderlySusceptibility(VirusStrainConfigGroup.StrainParams strain, double factor) {
 		NavigableMap<Integer, Double> susceptibility = new TreeMap<>(strain.getAgeSusceptibility());
 		if (!susceptibility.tailMap(59, true).isEmpty())
 			throw new IllegalStateException("ageSusceptibility already has entries from age 59 on: " + susceptibility);
 		susceptibility.put(59, 1.0);
-		susceptibility.put(60, params.elderlySusceptibility);
+		susceptibility.put(60, factor);
 		strain.setAgeSusceptibility(susceptibility);
-		return config;
 	}
 
 	public static final class Params {
