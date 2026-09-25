@@ -1,0 +1,44 @@
+# Weekly laboratory-confirmed influenza notifications (IfSG), Berlin (Region_Id 11), all ages (00+).
+# Source: Robert Koch-Institut, "Laborbestätigte Influenzafälle in Deutschland" (version 2026-09-17), CC BY 4.0,
+#   https://github.com/robert-koch-institut/Influenzafaelle_in_Deutschland,
+#   file IfSG_Influenzafaelle.tsv at commit 25cf2a0886785c8b5af720c815966af068baf248, retrieved 2026-09-25T12:32:37Z.
+#   Same commit as Scenarios/Cologne/nrw-ifsg-influenza-2025-26.tsv.
+# week = ISO reporting week (Meldewoche: the week the health office learned of the case); cases = Fallzahl.
+# Drives the shape of the influenza import in berlin.GenerateInfluenzaConfig; weeks 2025-W38 and 2026-W21 only serve the smoothing.
+week	cases
+2025-W38	6
+2025-W39	8
+2025-W40	18
+2025-W41	30
+2025-W42	30
+2025-W43	35
+2025-W44	40
+2025-W45	50
+2025-W46	43
+2025-W47	52
+2025-W48	118
+2025-W49	264
+2025-W50	487
+2025-W51	586
+2025-W52	396
+2026-W01	711
+2026-W02	951
+2026-W03	946
+2026-W04	1011
+2026-W05	981
+2026-W06	897
+2026-W07	774
+2026-W08	546
+2026-W09	429
+2026-W10	206
+2026-W11	125
+2026-W12	58
+2026-W13	44
+2026-W14	9
+2026-W15	22
+2026-W16	10
+2026-W17	16
+2026-W18	7
+2026-W19	11
+2026-W20	6
+2026-W21	2

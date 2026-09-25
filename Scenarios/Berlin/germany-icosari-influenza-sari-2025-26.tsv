@@ -1,0 +1,43 @@
+# Weekly influenza SARI hospitalisation incidence per 100,000, Germany, all ages (00+), ICOSARI hospital sentinel.
+# SARI = ICD-10 J09-J22 main diagnosis; the influenza subgroup additionally has J10 in main or secondary diagnosis.
+# Source: Robert Koch-Institut, "SARI-Hospitalisierungsinzidenz" (version 2026-09-17), CC BY 4.0,
+#   https://github.com/robert-koch-institut/SARI-Hospitalisierungsinzidenz,
+#   file SARI-Hospitalisierungsinzidenz.tsv at commit 4587904738d5012834b20cfd2e28da4ece45e422, retrieved 2026-09-23T15:52:54Z.
+# week = ISO week of hospital admission. Used by analyze_run.py as an order-of-magnitude check only: national, not Cologne.
+week	incidence
+2025-W38	0.1
+2025-W39	0.2
+2025-W40	0.1
+2025-W41	0.3
+2025-W42	0.2
+2025-W43	0.2
+2025-W44	0.4
+2025-W45	0.2
+2025-W46	0.5
+2025-W47	1.0
+2025-W48	1.8
+2025-W49	3.4
+2025-W50	5.7
+2025-W51	6.6
+2025-W52	9.5
+2026-W01	12.2
+2026-W02	9.8
+2026-W03	10.7
+2026-W04	10.5
+2026-W05	13.0
+2026-W06	15.1
+2026-W07	11.9
+2026-W08	8.7
+2026-W09	6.7
+2026-W10	2.6
+2026-W11	1.6
+2026-W12	0.9
+2026-W13	0.6
+2026-W14	0.4
+2026-W15	0.2
+2026-W16	0.3
+2026-W17	0.2
+2026-W18	0.0
+2026-W19	0.2
+2026-W20	0.0
+2026-W21	0.1
