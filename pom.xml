@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.matsim-org</groupId>
     <artifactId>matsim-episim</artifactId>
-    <version>2027-SNAPSHOT-22.09.26</version>
+    <version>2027-SNAPSHOT</version>
 
     <name>MATSim Episim Example</name>
     <description>Epidemic simulation for MATSim</description>
@@ -20,7 +20,7 @@
     </licenses>
 
     <properties>
-        <episim.version>2027-SNAPSHOT-23.09.26-2</episim.version>
+        <episim.version>2027-SNAPSHOT-25.09.26</episim.version>
         <java.version>25</java.version>
         <mainClass>org.matsim.run.RunEpisim</mainClass>
     </properties>

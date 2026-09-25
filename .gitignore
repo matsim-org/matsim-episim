@@ -287,5 +287,6 @@ testoutput*
 theta*
 2020-*
 triang*
-/scripts/
+/scripts/*
+!/scripts/influenza.sh
 /airflow/
