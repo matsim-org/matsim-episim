@@ -3,31 +3,26 @@
 ## Run
 
 ```
-java -jar matsim-episim.jar --modules org.matsim.episim.run.modules.InfluenzaCologneScenario
+java -cp matsim-episim.jar org.matsim.episim.run.batch.RunInfluenza --scenario Scenarios/Cologne
 ```
 
-or `org.matsim.episim.run.batch.StarterBatchInfluenzaCologne` for a seeded batch that is packed for the
-viewer and, if `EPISIM_OUTPUT` is a versioned directory of an SVN working copy, uploaded there.
+from the repo root (paths in `config.xml` are relative to it). `RunInfluenza` runs two seeds of the whole season,
+packs them for the viewer and, if `EPISIM_OUTPUT` is a versioned directory of an SVN working copy, uploads the
+packages there. `CalibrateInfluenza`, `SensitivityInfluenza` and `WeatherInfluenza` take the same `--scenario`
+argument. The runtime module alone is `org.matsim.episim.run.modules.InfluenzaScenario` with
+`-Depisim.scenario=Scenarios/Cologne`.
 
 The run covers the 2025/26 influenza season: Monday of KW 39/2025 (2025-09-22) to Sunday of KW 20/2026
 (2026-05-17), i.e. one week before the RKI season (KW 40–KW 20) through its end. It uses the Senozon
 Cologne population with its ordinary activity pattern: no pandemic mobility reductions, no masks, no
 tracing, and no COVID household-susceptibility calibration.
 
-`InfluenzaCologneScenario`
-(`src/main/java/org/matsim/episim/run/modules/InfluenzaCologneScenario.java`) is a thin module: it
-loads `config.xml` as-is and builds the contact-restriction **policy** in code (`buildPolicy()`). It
-also binds the Cologne-specific contact/infection models the parameterisation doc assumes.
-
-Two different sources for two different things:
-
-- **Policy** stays in code, in `buildPolicy()`: the NRW school holidays 2025/26 (KMK, "Ferien im
-  Schuljahr 2025/2026"). Everything else is open.
-- **Everything else is real, loaded data** in `config.xml` / `progression.conf`: dates, calibration
-  parameter, contact intensities, virus-strain/pathogen parameters including the infectivity profile
-  (`infectivityProfile` of the influenza `pathogenParams`), import schedule, tracing, and
-  disease-progression timing (the XML references `progression.conf`, which loads automatically). Edit
-  either file directly for a parameter sweep, no rebuild needed.
+Everything about the scenario is data: `config.xml`, `progression.conf` and `policy.conf` (the NRW school holidays
+2025/26, KMK "Ferien im Schuljahr 2025/2026"), plus `scenario.yaml` for the city, region, observed data and weather
+files. Dates, calibration parameter, contact intensities, virus-strain/pathogen parameters including the infectivity
+profile (`infectivityProfile` of the influenza `pathogenParams`), import schedule, tracing and disease-progression
+timing can be edited directly in these files for a parameter sweep, no rebuild needed. The model bindings and vehicle
+capacities are those of every influenza scenario, see `InfluenzaScenario`.
 
 Both trace back to [`docs/influenza-parameterisation.md`](../../docs/influenza-parameterisation.md),
 which was written for 2022/23. Still carried over from 2022/23 as placeholders: the calibration target
@@ -44,8 +39,5 @@ check the imported share at the peak in `diseaseImport.tsv`.
 ## Regenerating
 
 Run `org.matsim.episim.run.scenarios.cologne.GenerateInfluenzaConfig#main` from the repo root after
-changing the Cologne base setup or the influenza parameterisation logic; it overwrites both
-`config.xml` and `progression.conf` (and calls `InfluenzaCologneScenario#buildPolicy()` so the
-snapshot's policy matches what actually runs, even though `config.xml`'s `policyConfig` param itself
-is inert — a policy built in Java has no file behind it, so it can't be read back; see
-`InfluenzaCologneScenario`'s javadoc).
+changing the Cologne base setup or the influenza parameterisation (`InfluenzaParameterisation`); it overwrites
+`config.xml`, `progression.conf` and `policy.conf`.

@@ -3,7 +3,7 @@
 #   CC BY 4.0 (Open-Meteo, Copernicus ERA5), retrieved 2026-09-25.
 # tmax = daily maximum temperature 2 m in deg C, prcp = daily precipitation sum in mm.
 # Gridded reanalysis, not a station series such as the Koeln-Bonn station.
-# Used by WeatherInfluenzaCologne (EpisimUtils.getOutDoorFractionFromDateAndTemp2) for the leisure outdoor fraction.
+# Used by WeatherInfluenza (InfluenzaParameterisation#weatherOutdoorFraction) for the leisure outdoor fraction.
 date,tmax,prcp
 2025-09-01,21.6,21.9
 2025-09-02,21.5,0.0

@@ -1,0 +1,21 @@
+# Influenza scenario Cologne, read by RunInfluenza and the other influenza batches (see ScenarioDescriptor). config.xml,
+# progression.conf and policy.conf are written by org.matsim.episim.run.scenarios.cologne.GenerateInfluenzaConfig.
+city: Köln
+country: DE
+region: Nordrhein-Westfalen
+observed:
+  - name: Influenza notifications NRW (RKI IfSG)
+    file: nrw-ifsg-influenza-2025-26.tsv
+    value: cases
+    unit: count
+    # Fallzahl / Inzidenz of the RKI series in the 2025/26 season
+    population: 18041000
+    plot: casCom
+  - name: Influenza SARI hospitalisations Germany (RKI ICOSARI)
+    file: germany-icosari-influenza-sari-2025-26.tsv
+    value: incidence
+    unit: per100k
+    plot: hospNewCas
+weather:
+  daily: cologne-weather-2025-26.csv
+  average: cologne-weather-avg-1996-2025.csv

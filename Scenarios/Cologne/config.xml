@@ -121,7 +121,7 @@
 		<param name="leisureOutdoorFraction" value="2025-04-15=0.8;2025-09-15=0.8;2025-11-15=0.1;2026-02-15=0.1;2026-04-15=0.8" />
 		<param name="lowerAgeBoundaryForInitInfections" value="-1" />
 		<param name="maxContacts" value="3.0" />
-		<param name="policyConfig" value="null" />
+		<param name="policyConfig" value="Scenarios/Cologne/policy.conf" />
 		<param name="progressionConfig" value="Scenarios/Cologne/progression.conf" />
 		<!-- Possible values: yes,no -->
 		<param name="reportTimeUse" value="no" />
@@ -286,10 +286,10 @@
 		<param name="greenPassValidDays" value="-1" />
 		<param name="ignoredActivities" value="" />
 		<param name="locationThreshold" value="4" />
-		<param name="minDuration" value="900.0" />
+		<param name="minDuration" value="0.0" />
 		<param name="putTraceablePersonsInQuarantineAfterDay" value="2147483647" />
 		<param name="quarantineDuration" value="" />
-		<param name="quarantineHousehold" value="true" />
+		<param name="quarantineHousehold" value="false" />
 		<!-- Possible values: SUSCEPTIBLE,NON_SYMPTOMATIC -->
 		<param name="quarantineRelease" value="SUSCEPTIBLE" />
 		<param name="quarantineStatus" value="" />
@@ -297,10 +297,10 @@
 		<!-- Possible values: NONE,INDIVIDUAL_ONLY,LOCATION,LOCATION_WITH_TESTING,IDENTIFY_SOURCE,RANDOM -->
 		<param name="strategy" value="INDIVIDUAL_ONLY" />
 		<param name="traceSusceptible" value="true" />
-		<param name="tracingCapacity" value="2020-04-01=20;2020-06-15=100" />
-		<param name="tracingDaysDistance" value="2" />
-		<param name="tracingDelay" value="1970-01-01=5" />
-		<param name="tracingProbability" value="1970-01-01=0.5" />
+		<param name="tracingCapacity" value="" />
+		<param name="tracingDaysDistance" value="4" />
+		<param name="tracingDelay" value="" />
+		<param name="tracingProbability" value="" />
 	</module>
 	<module name="eventsManager" >
 		<!-- Estimated number of events during mobsim run. An optional optimization hint for the framework. -->
