@@ -823,7 +823,7 @@
 			<param name="factorCritical" value="1.0" />
 			<param name="factorSeriouslySick" value="1.0" />
 			<param name="factorSeriouslySickVaccinated" value="1.0" />
-			<param name="infectiousness" value="1.0" />
+			<param name="infectiousness" value="0.4" />
 			<param name="pathogen" value="influenza" />
 			<param name="strain" value="influenza" />
 		</parameterset>
