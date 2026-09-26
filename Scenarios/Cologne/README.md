@@ -8,8 +8,8 @@ java -cp matsim-episim.jar org.matsim.episim.run.batch.RunInfluenza --scenario S
 
 from the repo root (paths in `config.xml` are relative to it). `RunInfluenza` runs two seeds of the whole season,
 packs them for the viewer and, if `EPISIM_OUTPUT` is a versioned directory of an SVN working copy, uploads the
-packages there. `CalibrateInfluenza`, `SensitivityInfluenza` and `WeatherInfluenza` take the same `--scenario`
-argument. The runtime module alone is `org.matsim.episim.run.modules.InfluenzaScenario` with
+packages there. `--infectiousness 0.3,0.35` runs those values instead of the one in `config.xml`, `--seeds N` the
+first N seeds. The runtime module alone is `org.matsim.episim.run.modules.InfluenzaScenario` with
 `-Depisim.scenario=Scenarios/Cologne`.
 
 The run covers the 2025/26 influenza season: Monday of KW 39/2025 (2025-09-22) to Sunday of KW 20/2026

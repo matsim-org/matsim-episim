@@ -12,6 +12,8 @@
 #   --infectiousness LIST   e.g. 0.30,0.35,0.40; values from 0.10 to 1.00 in steps of 0.05 (default: the config's value)
 #   --tasks N               runs in parallel (default 1)
 #   --memory SIZE           Java heap (default 24g); one 25 % run needs about 8 GB (Cologne) to 14 GB (Berlin)
+#   --resume DATE/RUN       finish a failed run without simulating again (e.g. 2026-09-25/00002); give the same
+#                           scenarios, seeds and infectiousness as the original run
 #
 # Settings are kept in ~/.episim (EPISIM_HOME): settings.env and svn-password (mode 600). setup asks for them, or takes
 # SVN_USERNAME, SVN_FOLDER, OUTPUT_ROOT and SVN_PASSWORD_FILE from the environment.
@@ -91,8 +93,11 @@ ask() { # ask VAR "question" default
 build() {
 	ensure_java
 	ensure_maven
-	log "building matsim-episim"
-	(cd "$REPO" && "$MVN" -q -DskipTests package)
+	log "building matsim-episim (the first build downloads several hundred MB of dependencies)"
+	# Maven 3.9 on Java 25 warns about jansi and Unsafe; the timeouts keep an unreachable repository from blocking the build
+	export MAVEN_OPTS="${MAVEN_OPTS:-} --enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow"
+	(cd "$REPO" && "$MVN" -B -DskipTests -Daether.connector.connectTimeout=30000 -Daether.connector.requestTimeout=120000 \
+		package | grep --line-buffered -E '^\[(INFO|WARNING|ERROR)\] (Downloading from|BUILD|Total time)|ERROR')
 	log "built $(ls -t "$REPO"/matsim-episim-*.jar | head -1)"
 }
 
@@ -141,12 +146,12 @@ run() {
 	local memory=24g args=() scenarios=()
 	while (( $# )); do
 		case $1 in
-			--scenario | --seeds | --infectiousness | --tasks | --memory) [[ $# -ge 2 ]] || die "option $1 needs a value" ;;
+			--scenario | --seeds | --infectiousness | --tasks | --memory | --resume) [[ $# -ge 2 ]] || die "option $1 needs a value" ;;
 			*) die "unknown option $1" ;;
 		esac
 		case $1 in
 			--scenario) scenarios+=(--scenario "$2") ;;
-			--seeds | --infectiousness | --tasks) args+=("$1" "$2") ;;
+			--seeds | --infectiousness | --tasks | --resume) args+=("$1" "$2") ;;
 			--memory) memory=$2 ;;
 		esac
 		shift 2
@@ -180,5 +185,5 @@ case ${1:-} in
 	build) load_settings; build ;;
 	run) shift; run "$@" ;;
 	forget) load_settings; rm -f "$SVN_PASSWORD_FILE"; log "removed $SVN_PASSWORD_FILE" ;;
-	*) sed -n '2,18p' "$0"; exit 1 ;;
+	*) sed -n '2,20p' "$0"; exit 1 ;;
 esac

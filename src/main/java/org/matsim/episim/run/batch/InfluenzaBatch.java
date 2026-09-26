@@ -118,12 +118,14 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 	@Override
 	public Collection<OutputAnalysis> postProcessing() {
 		String startDate = InfluenzaParameterisation.SEASON_START.toString();
-		return List.of(
+		List<OutputAnalysis> analyses = new ArrayList<>(List.of(
 			new InfectionLocationsFromEvents(),
-			new RValuesFromEvents().withArgs("--start-date", startDate),
-			new SecondaryAttackRateFromEvents().withArgs("--start-date", startDate),
-			new FilterEvents().withArgs()
-		);
+			new RValuesFromEvents().withArgs("--start-date", startDate)));
+		// SecondaryAttackRateFromEvents only counts the district Köln (hard-coded in matsim-episim-libs)
+		if (descriptor().city().equals("Köln"))
+			analyses.add(new SecondaryAttackRateFromEvents().withArgs("--start-date", startDate));
+		analyses.add(new FilterEvents().withArgs());
+		return analyses;
 	}
 
 	protected Config seasonConfig(long seed) {
@@ -134,7 +136,9 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 
 	/**
 	 * Arguments: {@code --scenario <folder>} (repeated or comma-separated), {@code --seeds <number>},
-	 * {@code --infectiousness <values>} (a subset of the batch's grid) and {@code --tasks <runs in parallel>}.
+	 * {@code --infectiousness <values>} (a subset of the batch's grid), {@code --tasks <runs in parallel>} and
+	 * {@code --resume <run directory>}: finishes a run whose simulations are done (post-processing, packing, commit)
+	 * without simulating again; it needs the same scenarios, seeds and infectiousness as the original run.
 	 * With several scenarios each gets a subfolder in the output directories, and covid-sim shows
 	 * {@code .../output-vis-no-seeds} as one dashboard with a tab per city. Nothing is committed unless all succeed.
 	 */
@@ -163,12 +167,19 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 		}
 
 		String configuredOutput = System.getenv("EPISIM_OUTPUT");
-		OutputPaths paths = createOutputPaths(configuredOutput);
+		OutputPaths paths = arguments.resume() != null ? existingOutputPaths(configuredOutput, arguments.resume())
+			: createOutputPaths(configuredOutput);
 
 		for (ScenarioDescriptor descriptor : descriptors) {
 			System.setProperty(InfluenzaScenario.SCENARIO_PROPERTY, descriptor.directory().toString());
 			OutputPaths scenarioPaths = multiCity ? paths.forScenario(subfolder(descriptor)) : paths;
-			runScenario(setup, params, descriptor, scenarioPaths, arguments.tasks(), "Influenza " + descriptor.city() + " " + label);
+			String scenarioLabel = "Influenza " + descriptor.city() + " " + label;
+			if (arguments.resume() == null)
+				runScenario(setup, params, descriptor, scenarioPaths, arguments.tasks(), false, scenarioLabel);
+			else if (isPacked(scenarioPaths))
+				log.info("{} is packed already, skipping", scenarioPaths.simulation());
+			else
+				runScenario(setup, params, descriptor, scenarioPaths, arguments.tasks(), true, scenarioLabel);
 		}
 
 		String cities = descriptors.stream().map(ScenarioDescriptor::city).collect(Collectors.joining(" + "));
@@ -177,21 +188,25 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 	}
 
 	private static void runScenario(Class<? extends InfluenzaBatch<?>> setup, Class<?> params, ScenarioDescriptor descriptor,
-									OutputPaths paths, int tasks, String label) throws IOException {
+									OutputPaths paths, int tasks, boolean postOnly, String label) throws IOException {
 
 		ZonedDateTime startedAt = ZonedDateTime.now();
 		Path output = paths.simulation();
 
-		String[] runArgs = {
+		List<String> runArgs = new ArrayList<>(List.of(
 			"--output", output.toString(),
 			RunParallel.OPTION_SETUP, setup.getName(),
 			RunParallel.OPTION_PARAMS, params.getName(),
 			RunParallel.OPTION_TASKS, Integer.toString(tasks),
 			RunParallel.OPTION_ITERATIONS, Integer.toString(ITERATIONS),
-			RunParallel.OPTION_METADATA
-		};
+			RunParallel.OPTION_METADATA));
+		if (postOnly) {
+			if (!Files.isDirectory(output))
+				throw new IllegalArgumentException("Nothing to resume in " + output);
+			runArgs.add(RunParallel.OPTION_POST_ONLY);
+		}
 
-		int exitCode = new CommandLine(new RunParallel<>()).execute(runArgs);
+		int exitCode = new CommandLine(new RunParallel<>()).execute(runArgs.toArray(String[]::new));
 		if (exitCode != 0)
 			throw new IllegalStateException(label + " failed with exit code " + exitCode);
 
@@ -214,13 +229,15 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 		return descriptor.directory().toAbsolutePath().normalize().getFileName().toString();
 	}
 
-	record Arguments(List<Path> scenarios, @Nullable Integer seeds, @Nullable String infectiousness, int tasks) {
+	record Arguments(List<Path> scenarios, @Nullable Integer seeds, @Nullable String infectiousness, int tasks,
+					 @Nullable String resume) {
 	}
 
 	static Arguments parseArguments(String[] args) {
 		List<Path> scenarios = new ArrayList<>();
 		Integer seeds = null;
 		String infectiousness = null;
+		String resume = null;
 		int tasks = 1;
 		for (int i = 0; i < args.length; i += 2) {
 			if (i + 1 == args.length)
@@ -235,17 +252,18 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 				case "--seeds" -> seeds = Integer.parseInt(value);
 				case "--infectiousness" -> infectiousness = value;
 				case "--tasks" -> tasks = Integer.parseInt(value);
+				case "--resume" -> resume = value;
 				default -> throw usage(args);
 			}
 		}
 		if (tasks < 1)
 			throw new IllegalArgumentException("--tasks must be at least 1");
-		return new Arguments(scenarios, seeds, infectiousness, tasks);
+		return new Arguments(scenarios, seeds, infectiousness, tasks, resume);
 	}
 
 	private static IllegalArgumentException usage(String[] args) {
 		return new IllegalArgumentException("Unexpected arguments " + String.join(" ", args)
-			+ "; usage: --scenario Scenarios/<City> [--scenario ...] [--seeds N] [--infectiousness 0.3,0.35] [--tasks N]");
+			+ "; usage: --scenario Scenarios/<City> [--scenario ...] [--seeds N] [--infectiousness 0.3,0.35] [--tasks N] [--resume <run dir>]");
 	}
 
 	/** Whether this seed is one of the first {@code --seeds}; batches return no config otherwise. */
@@ -464,6 +482,26 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 			runDirectory.resolve("output-vis-no-seeds"),
 			runDirectory
 		);
+	}
+
+	/** An existing run directory, absolute or relative to {@code EPISIM_OUTPUT}. */
+	private static OutputPaths existingOutputPaths(String configuredOutput, String resume) {
+		Path runDirectory = Path.of(resume);
+		if (!runDirectory.isAbsolute() && configuredOutput != null && !configuredOutput.isBlank())
+			runDirectory = Path.of(configuredOutput.strip()).resolve(resume);
+		if (!Files.isDirectory(runDirectory.resolve("output")))
+			throw new IllegalArgumentException("No run to resume in " + runDirectory);
+		return new OutputPaths(runDirectory.resolve("output"), runDirectory.resolve("output-vis-keep-seeds"),
+			runDirectory.resolve("output-vis-no-seeds"), runDirectory);
+	}
+
+	/** Both viewer packages written; a partial one has to be removed before resuming. */
+	private static boolean isPacked(OutputPaths paths) {
+		boolean withSeeds = Files.exists(paths.visualizationWithSeeds().resolve("metadata.yaml"));
+		boolean withoutSeeds = Files.exists(paths.visualizationWithoutSeeds().resolve("metadata.yaml"));
+		if (withSeeds != withoutSeeds)
+			throw new IllegalStateException("Only one viewer package of " + paths.simulation() + " exists; remove it and resume");
+		return withSeeds;
 	}
 
 	private static Path createNextRunDirectory(Path outputRoot) throws IOException {

@@ -10,14 +10,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 /**
  * {@value #FILE_NAME} of a scenario folder: city (the district attribute of the population), country, region, the
- * observed data for the viewer and, optionally, weather files. Example: {@code Scenarios/Berlin/scenario.yaml}.
+ * observed data for the viewer. Example: {@code Scenarios/Berlin/scenario.yaml}.
  */
-public record ScenarioDescriptor(Path directory, String city, String country, String region, List<Observed> observed,
-								 @Nullable Weather weather) {
+public record ScenarioDescriptor(Path directory, String city, String country, String region, List<Observed> observed) {
 
 	public static final String FILE_NAME = "scenario.yaml";
 	public static final String CONFIG_FILE_NAME = "config.xml";
@@ -26,10 +23,7 @@ public record ScenarioDescriptor(Path directory, String city, String country, St
 	public record Observed(String name, String file, String value, String unit, Integer population, String plot) {
 	}
 
-	public record Weather(String daily, String average) {
-	}
-
-	private record Yaml(String city, String country, String region, List<Observed> observed, Weather weather) {
+	private record Yaml(String city, String country, String region, List<Observed> observed) {
 	}
 
 	public static ScenarioDescriptor read(Path directory) {
@@ -42,7 +36,7 @@ public record ScenarioDescriptor(Path directory, String city, String country, St
 				.enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
 				.readValue(file.toFile(), Yaml.class);
 			ScenarioDescriptor descriptor = new ScenarioDescriptor(directory, yaml.city(), yaml.country(), yaml.region(),
-				yaml.observed() == null ? List.of() : List.copyOf(yaml.observed()), yaml.weather());
+				yaml.observed() == null ? List.of() : List.copyOf(yaml.observed()));
 			descriptor.validate();
 			return descriptor;
 		} catch (IOException e) {
@@ -58,22 +52,10 @@ public record ScenarioDescriptor(Path directory, String city, String country, St
 		return directory.resolve(observed.file());
 	}
 
-	/** {@code [daily, average]} */
-	public Path[] weatherFiles() {
-		if (weather == null)
-			throw new IllegalStateException("No 'weather' in " + directory.resolve(FILE_NAME));
-		return new Path[]{directory.resolve(weather.daily()), directory.resolve(weather.average())};
-	}
-
 	private void validate() {
 		for (String[] field : new String[][]{{"city", city}, {"country", country}, {"region", region}})
 			if (field[1] == null || field[1].isBlank())
 				throw new IllegalArgumentException("'" + field[0] + "' missing in " + directory.resolve(FILE_NAME));
-
-		if (weather != null)
-			for (Path file : weatherFiles())
-				if (!Files.isRegularFile(file))
-					throw new IllegalArgumentException("Weather file not found: " + file);
 
 		for (Observed o : observed) {
 			if (!Files.isRegularFile(observedFile(o)))
