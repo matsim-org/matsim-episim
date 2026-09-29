@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Sets up a machine for the influenza runs of this repository and runs them.
 #
-#   scripts/influenza.sh setup          once: Java, Maven, build, SVN credentials and working copy
-#   scripts/influenza.sh build          after git pull
+#   scripts/influenza.sh setup          once: SVN credentials and working copy, plus Java, Maven and the build without a container engine
+#   scripts/influenza.sh build          after git pull (without a container engine, or for run --native)
 #   scripts/influenza.sh run [options]  e.g. nohup scripts/influenza.sh run --seeds 4 --infectiousness 0.3,0.35 > run.log 2>&1 &
 #   scripts/influenza.sh forget         deletes the stored SVN password
 #
@@ -15,6 +15,14 @@
 #   --memory SIZE           Java heap (default 24g); one 25 % run needs about 8 GB (Cologne) to 14 GB (Berlin)
 #   --resume DATE/RUN       finish a failed run without simulating again (e.g. 2026-09-25/00002); give the same
 #                           scenarios, seeds and infectiousness as the original run
+#   --image REF             container image (default: ghcr.io/matsim-org/matsim-episim:sha-<HEAD>, built by GitHub Actions;
+#                           give a ...@sha256:<digest> to repeat a run exactly)
+#   --native                run the jar built here instead of the container
+#
+# With podman (CONTAINER_ENGINE) installed, run starts the image: Java, the application and svn come from the
+# image, the working copy OUTPUT_ROOT is mounted as /output and the SVN password file read-only. A --scenario folder
+# outside Scenarios/ of this repository is mounted into the container, the others are the image's own. The image
+# digest and git commit of the run are printed and written to $OUTPUT_ROOT/../run-images.log.
 #
 # Settings are kept in ~/.episim (EPISIM_HOME): settings.env and svn-password (mode 600). setup asks for them, or takes
 # SVN_USERNAME, SVN_FOLDER, OUTPUT_ROOT and SVN_PASSWORD_FILE from the environment.
@@ -30,6 +38,9 @@ EPISIM_HOME=${EPISIM_HOME:-$HOME/.episim}
 SETTINGS="$EPISIM_HOME/settings.env"
 PASSWORD_FILE_DEFAULT="$EPISIM_HOME/svn-password"
 REPO=${EPISIM_REPO:-$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)}
+
+CONTAINER_ENGINE=${CONTAINER_ENGINE:-$(command -v podman || true)}
+IMAGE_REPO=${EPISIM_IMAGE_REPO:-ghcr.io/matsim-org/matsim-episim}
 
 die() { echo "error: $*" >&2; exit 1; }
 log() { echo "[$(date +%H:%M:%S)] $*"; }
@@ -158,24 +169,94 @@ setup() {
 		svn_auth checkout --quiet --depth empty "$SVN_ROOT/$SVN_FOLDER" "$OUTPUT_ROOT"
 	fi
 
-	build
+	if [[ -z "$CONTAINER_ENGINE" ]]; then
+		build
+	else
+		log "using $CONTAINER_ENGINE for runs; run --native needs: $0 build"
+	fi
 	log "setup done; settings in $SETTINGS"
+}
+
+# run_container MEMORY IMAGE --scenario DIR ... -- ARGS...
+run_container() {
+	local memory=$1 image=$2
+	shift 2
+	local scenarios=() args=()
+	while (( $# )) && [[ $1 != -- ]]; do
+		[[ $1 == --scenario ]] && scenarios+=("$2")
+		shift 2
+	done
+	shift
+	args=("$@")
+
+	[[ -n "$image" ]] || image="$IMAGE_REPO:sha-$(git -C "$REPO" rev-parse --short=7 HEAD)"
+
+	ensure_svn
+	log "using $image"
+	if ! "$CONTAINER_ENGINE" image exists "$image" 2> /dev/null; then
+		"$CONTAINER_ENGINE" pull --quiet "$image" > /dev/null \
+			|| die "cannot pull $image; has GitHub Actions built this commit? Otherwise give --image"
+	fi
+	local digest
+	digest=$("$CONTAINER_ENGINE" image inspect --format '{{index .RepoDigests 0}}' "$image" 2> /dev/null || true)
+	[[ -n "$digest" ]] || digest=$image
+	local commit
+	commit=$("$CONTAINER_ENGINE" run --rm "$image" version | sed -n 's/^gitCommit=//p')
+
+	# scenarios of this repository are the image's own; other folders are mounted
+	local mounts=() container_args=() dir host candidate
+	for dir in "${scenarios[@]}"; do
+		candidate=$dir
+		[[ $dir == /* ]] || candidate="$REPO/$dir"
+		if [[ -d "$candidate" ]]; then
+			host=$(cd "$candidate" && pwd)
+			if [[ $host == "$REPO"/Scenarios/* ]]; then
+				container_args+=(--scenario "Scenarios/$(basename "$host")")
+			else
+				mounts+=(-v "$host:/scenarios/$(basename "$host"):ro")
+				container_args+=(--scenario "/scenarios/$(basename "$host")")
+			fi
+		else
+			container_args+=(--scenario "$dir")
+		fi
+	done
+
+	svn_auth update --quiet --set-depth immediates "$OUTPUT_ROOT"
+	local today
+	today=$(date +%F)
+	[[ -d "$OUTPUT_ROOT/$today" ]] && svn_auth update --quiet --set-depth immediates "$OUTPUT_ROOT/$today"
+
+	printf '%s\t%s\t%s\n' "$digest" "$commit" "$(date -u +%FT%TZ)" >> "$(dirname "$OUTPUT_ROOT")/run-images.log"
+	log "RunInfluenza in $digest (commit ${commit:-unknown}): ${container_args[*]} ${args[*]:-} -> $SVN_ROOT/$SVN_FOLDER"
+	# the user of the host owns the files in /output: keep-id maps it to the uid of the image
+	"$CONTAINER_ENGINE" run --rm --userns=keep-id:uid=10001,gid=10001 --security-opt label=disable \
+		--hostname "$(hostname)" \
+		-v "$OUTPUT_ROOT:/output" \
+		-v "$SVN_PASSWORD_FILE:/run/secrets/svn-password:ro" \
+		${mounts[@]+"${mounts[@]}"} \
+		-e SVN_USERNAME="$SVN_USERNAME" -e SVN_PASSWORD_FILE=/run/secrets/svn-password \
+		-e EPISIM_IMAGE="$digest" \
+		-e JAVA_TOOL_OPTIONS="-Xmx$memory -Djava.awt.headless=true" \
+		"$image" influenza "${container_args[@]}" ${args[@]+"${args[@]}"}
 }
 
 run() {
 	load_settings
 	[[ -n "${SVN_USERNAME:-}" && -n "${OUTPUT_ROOT:-}" ]] || die "not set up; run: $0 setup"
 
-	local memory=24g args=() scenarios=()
+	local memory=24g args=() scenarios=() native=false image=${EPISIM_IMAGE_REF:-}
+	[[ -n "$CONTAINER_ENGINE" ]] || native=true
 	while (( $# )); do
 		case $1 in
-			--scenario | --seeds | --infectiousness | --tasks | --task-threads | --memory | --resume) [[ $# -ge 2 ]] || die "option $1 needs a value" ;;
+			--native) native=true; shift; continue ;;
+			--scenario | --seeds | --infectiousness | --tasks | --task-threads | --memory | --resume | --image) [[ $# -ge 2 ]] || die "option $1 needs a value" ;;
 			*) die "unknown option $1" ;;
 		esac
 		case $1 in
 			--scenario) scenarios+=(--scenario "$2") ;;
 			--seeds | --infectiousness | --tasks | --task-threads | --resume) args+=("$1" "$2") ;;
 			--memory) memory=$2 ;;
+			--image) image=$2 ;;
 		esac
 		shift 2
 	done
@@ -184,6 +265,11 @@ run() {
 		for descriptor in "$REPO"/Scenarios/*/scenario.yaml; do
 			scenarios+=(--scenario "Scenarios/$(basename "$(dirname "$descriptor")")")
 		done
+	fi
+
+	if [[ $native == false ]]; then
+		run_container "$memory" "$image" "${scenarios[@]}" -- ${args[@]+"${args[@]}"}
+		return
 	fi
 
 	ensure_java
