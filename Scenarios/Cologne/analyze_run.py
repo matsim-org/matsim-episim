@@ -7,7 +7,7 @@
 
 * One parameter set (RunInfluenza): prints six checks, writes influenza_check_weekly.tsv and
   influenza_check.png.
-* Several parameter sets (CalibrateInfluenza; parameters read from _info.txt): additionally fits the growth
+* Several parameter sets (RunInfluenza --infectiousness; parameters read from _info.txt): additionally fits the growth
   rate per parameter value, interpolates the value that meets the target (influenza SARI growth, NRW notifications as
   cross-check), writes influenza_calibration.tsv and influenza_calibration.png, and runs the six checks on the grid
   value closest to the estimate.

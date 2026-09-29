@@ -136,7 +136,9 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 
 	/**
 	 * Arguments: {@code --scenario <folder>} (repeated or comma-separated), {@code --seeds <number>},
-	 * {@code --infectiousness <values>} (a subset of the batch's grid), {@code --tasks <runs in parallel>} and
+	 * {@code --infectiousness <values>} (a subset of the batch's grid), {@code --tasks <runs in parallel>},
+	 * {@code --task-threads <threads per run>} (default: the available cores shared among the tasks, see
+	 * {@link #defaultTaskThreads(int)}) and
 	 * {@code --resume <run directory>}: finishes a run whose simulations are done (post-processing, packing, commit)
 	 * without simulating again; it needs the same scenarios, seeds and infectiousness as the original run.
 	 * With several scenarios each gets a subfolder in the output directories, and covid-sim shows
@@ -166,6 +168,11 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 				throw new IllegalArgumentException("Scenario folders must have distinct names: " + scenarios);
 		}
 
+		int threads = arguments.taskThreads() != null ? arguments.taskThreads() : defaultTaskThreads(arguments.tasks());
+		if (arguments.resume() == null)
+			log.info("Running {} simulations in parallel with {} threads each ({} cores available)",
+				arguments.tasks(), threads, Runtime.getRuntime().availableProcessors());
+
 		String configuredOutput = System.getenv("EPISIM_OUTPUT");
 		OutputPaths paths = arguments.resume() != null ? existingOutputPaths(configuredOutput, arguments.resume())
 			: createOutputPaths(configuredOutput);
@@ -175,11 +182,11 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 			OutputPaths scenarioPaths = multiCity ? paths.forScenario(subfolder(descriptor)) : paths;
 			String scenarioLabel = "Influenza " + descriptor.city() + " " + label;
 			if (arguments.resume() == null)
-				runScenario(setup, params, descriptor, scenarioPaths, arguments.tasks(), false, scenarioLabel);
+				runScenario(setup, params, descriptor, scenarioPaths, arguments.tasks(), threads, false, scenarioLabel);
 			else if (isPacked(scenarioPaths))
 				log.info("{} is packed already, skipping", scenarioPaths.simulation());
 			else
-				runScenario(setup, params, descriptor, scenarioPaths, arguments.tasks(), true, scenarioLabel);
+				runScenario(setup, params, descriptor, scenarioPaths, arguments.tasks(), threads, true, scenarioLabel);
 		}
 
 		String cities = descriptors.stream().map(ScenarioDescriptor::city).collect(Collectors.joining(" + "));
@@ -188,7 +195,7 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 	}
 
 	private static void runScenario(Class<? extends InfluenzaBatch<?>> setup, Class<?> params, ScenarioDescriptor descriptor,
-									OutputPaths paths, int tasks, boolean postOnly, String label) throws IOException {
+									OutputPaths paths, int tasks, int threads, boolean postOnly, String label) throws IOException {
 
 		ZonedDateTime startedAt = ZonedDateTime.now();
 		Path output = paths.simulation();
@@ -198,6 +205,7 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 			RunParallel.OPTION_SETUP, setup.getName(),
 			RunParallel.OPTION_PARAMS, params.getName(),
 			RunParallel.OPTION_TASKS, Integer.toString(tasks),
+			RunParallel.OPTION_TASK_THREADS, Integer.toString(threads),
 			RunParallel.OPTION_ITERATIONS, Integer.toString(ITERATIONS),
 			RunParallel.OPTION_METADATA));
 		if (postOnly) {
@@ -210,7 +218,8 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 		if (exitCode != 0)
 			throw new IllegalStateException(label + " failed with exit code " + exitCode);
 
-		writeRunNotes(output, label, setup, startedAt, ZonedDateTime.now());
+		// the thread count changes the random streams, so it belongs to the run; irrelevant when only post-processing
+		writeRunNotes(output, label, setup, postOnly ? null : threads, startedAt, ZonedDateTime.now());
 		enrichMetadata(output.resolve("metadata.yaml"), descriptor, copyObservedData(output, descriptor));
 		new BatchOutputPacker(output, paths.visualizationWithSeeds(), descriptor.city(), true).pack();
 		new BatchOutputPacker(output, paths.visualizationWithoutSeeds(), descriptor.city(), false).pack();
@@ -230,7 +239,16 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 	}
 
 	record Arguments(List<Path> scenarios, @Nullable Integer seeds, @Nullable String infectiousness, int tasks,
-					 @Nullable String resume) {
+					 @Nullable Integer taskThreads, @Nullable String resume) {
+	}
+
+	/**
+	 * Threads per simulation if {@code --task-threads} is not given: the available cores shared among the tasks, at
+	 * least 2 because with a single thread the contact model checks infections immediately instead of at the end of
+	 * the day, which is different dynamics. Note that the thread count changes the random streams of a run.
+	 */
+	static int defaultTaskThreads(int tasks) {
+		return Math.max(2, Runtime.getRuntime().availableProcessors() / tasks);
 	}
 
 	static Arguments parseArguments(String[] args) {
@@ -238,6 +256,7 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 		Integer seeds = null;
 		String infectiousness = null;
 		String resume = null;
+		Integer taskThreads = null;
 		int tasks = 1;
 		for (int i = 0; i < args.length; i += 2) {
 			if (i + 1 == args.length)
@@ -252,18 +271,23 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 				case "--seeds" -> seeds = Integer.parseInt(value);
 				case "--infectiousness" -> infectiousness = value;
 				case "--tasks" -> tasks = Integer.parseInt(value);
+				case "--task-threads" -> taskThreads = Integer.parseInt(value);
 				case "--resume" -> resume = value;
 				default -> throw usage(args);
 			}
 		}
 		if (tasks < 1)
 			throw new IllegalArgumentException("--tasks must be at least 1");
-		return new Arguments(scenarios, seeds, infectiousness, tasks, resume);
+		// see defaultTaskThreads why 1 is not allowed
+		if (taskThreads != null && taskThreads < 2)
+			throw new IllegalArgumentException("--task-threads must be at least 2");
+		return new Arguments(scenarios, seeds, infectiousness, tasks, taskThreads, resume);
 	}
 
 	private static IllegalArgumentException usage(String[] args) {
 		return new IllegalArgumentException("Unexpected arguments " + String.join(" ", args)
-			+ "; usage: --scenario Scenarios/<City> [--scenario ...] [--seeds N] [--infectiousness 0.3,0.35] [--tasks N] [--resume <run dir>]");
+			+ "; usage: --scenario Scenarios/<City> [--scenario ...] [--seeds N] [--infectiousness 0.3,0.35] [--tasks N]"
+			+ " [--task-threads N] [--resume <run dir>]");
 	}
 
 	/** Whether this seed is one of the first {@code --seeds}; batches return no config otherwise. */
@@ -432,8 +456,8 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 			throw new IllegalStateException("svn " + String.join(" ", args) + " failed with exit code " + exit);
 	}
 
-	private static void writeRunNotes(Path output, String label, Class<?> setup, ZonedDateTime startedAt,
-									  ZonedDateTime finishedAt) throws IOException {
+	private static void writeRunNotes(Path output, String label, Class<?> setup, @Nullable Integer threads,
+									  ZonedDateTime startedAt, ZonedDateTime finishedAt) throws IOException {
 		String notes = """
 			# %s
 
@@ -441,6 +465,7 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 
 			- Started by: `%s`
 			- Host: `%s`
+			- Threads per simulation: `%s`
 			- Started at: `%s`
 			- Finished at: `%s`
 			- Duration: `%s`
@@ -449,6 +474,7 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 			setup.getSimpleName(),
 			System.getProperty("user.name", "unknown"),
 			resolveHostName(),
+			threads != null ? threads : "not simulated (resumed)",
 			DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(startedAt),
 			DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(finishedAt),
 			Duration.between(startedAt, finishedAt)

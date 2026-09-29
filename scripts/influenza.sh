@@ -11,6 +11,7 @@
 #   --seeds N               seeds per parameter set (default 2, at most 10)
 #   --infectiousness LIST   e.g. 0.30,0.35,0.40; values from 0.10 to 1.00 in steps of 0.05 (default: the config's value)
 #   --tasks N               runs in parallel (default 1)
+#   --task-threads N        threads per run, at least 2 (default: the cores divided by --tasks); changes the results
 #   --memory SIZE           Java heap (default 24g); one 25 % run needs about 8 GB (Cologne) to 14 GB (Berlin)
 #   --resume DATE/RUN       finish a failed run without simulating again (e.g. 2026-09-25/00002); give the same
 #                           scenarios, seeds and infectiousness as the original run
@@ -79,6 +80,29 @@ ensure_maven() {
 	fi
 }
 
+ensure_svn() {
+	[[ -x "$EPISIM_HOME/svn/bin/svn" ]] && PATH="$EPISIM_HOME/svn/bin:$PATH"
+	if ! command -v svn >/dev/null; then
+		local platform
+		case "$(uname -s)-$(uname -m)" in
+			Linux-x86_64) platform=linux-64 ;;
+			Linux-aarch64) platform=linux-aarch64 ;;
+			Darwin-arm64) platform=osx-arm64 ;;
+			Darwin-x86_64) platform=osx-64 ;;
+			*) die "svn is not installed and cannot be installed for $(uname -sm)" ;;
+		esac
+		log "installing Subversion (conda-forge, via micromamba) to $EPISIM_HOME/svn"
+		mkdir -p "$EPISIM_HOME/micromamba"
+		curl -fsSL "https://micro.mamba.pm/api/micromamba/$platform/latest" | tar -xj -C "$EPISIM_HOME/micromamba" bin/micromamba
+		MAMBA_ROOT_PREFIX="$EPISIM_HOME/micromamba" "$EPISIM_HOME/micromamba/bin/micromamba" create -y -q \
+			-p "$EPISIM_HOME/svn" -c conda-forge subversion > /dev/null
+		PATH="$EPISIM_HOME/svn/bin:$PATH"
+	fi
+	# the batch commits with svn too
+	export PATH
+	svn --version --quiet | awk -F. '{ exit !($1 > 1 || $2 >= 10) }' || die "svn 1.10 or newer is needed (--password-from-stdin)"
+}
+
 svn_auth() {
 	[[ -r "$SVN_PASSWORD_FILE" ]] || die "no SVN password file $SVN_PASSWORD_FILE; run setup"
 	svn --non-interactive --username "$SVN_USERNAME" --no-auth-cache --password-from-stdin "$@" < "$SVN_PASSWORD_FILE"
@@ -105,8 +129,7 @@ setup() {
 	mkdir -p "$EPISIM_HOME"
 	chmod 700 "$EPISIM_HOME"
 	load_settings
-	command -v svn >/dev/null || die "svn is not installed"
-	svn --version --quiet | awk -F. '{ exit !($1 > 1 || $2 >= 10) }' || die "svn 1.10 or newer is needed (--password-from-stdin)"
+	ensure_svn
 
 	ask SVN_USERNAME "SVN user name" "${SVN_USERNAME:-$USER}"
 	ask SVN_FOLDER "folder below $SVN_ROOT for the results" "${SVN_FOLDER:-$SVN_USERNAME}"
@@ -146,12 +169,12 @@ run() {
 	local memory=24g args=() scenarios=()
 	while (( $# )); do
 		case $1 in
-			--scenario | --seeds | --infectiousness | --tasks | --memory | --resume) [[ $# -ge 2 ]] || die "option $1 needs a value" ;;
+			--scenario | --seeds | --infectiousness | --tasks | --task-threads | --memory | --resume) [[ $# -ge 2 ]] || die "option $1 needs a value" ;;
 			*) die "unknown option $1" ;;
 		esac
 		case $1 in
 			--scenario) scenarios+=(--scenario "$2") ;;
-			--seeds | --infectiousness | --tasks | --resume) args+=("$1" "$2") ;;
+			--seeds | --infectiousness | --tasks | --task-threads | --resume) args+=("$1" "$2") ;;
 			--memory) memory=$2 ;;
 		esac
 		shift 2
@@ -164,6 +187,7 @@ run() {
 	fi
 
 	ensure_java
+	ensure_svn
 	local jar
 	jar=$(ls -t "$REPO"/matsim-episim-*.jar 2> /dev/null | head -1) || true
 	[[ -n "$jar" ]] || die "no matsim-episim jar in $REPO; run: $0 build"
