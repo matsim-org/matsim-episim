@@ -41,6 +41,10 @@ REPO=${EPISIM_REPO:-$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-t
 
 CONTAINER_ENGINE=${CONTAINER_ENGINE:-$(command -v podman || true)}
 IMAGE_REPO=${EPISIM_IMAGE_REPO:-docker.io/jarodocks/matsim-episim}
+IMAGE_REF=${EPISIM_IMAGE_REF:-}
+IMAGE_DIGEST=""
+NATIVE=false
+[[ -n "$CONTAINER_ENGINE" ]] || NATIVE=true
 
 die() { echo "error: $*" >&2; exit 1; }
 log() { echo "[$(date +%H:%M:%S)] $*"; }
@@ -114,9 +118,36 @@ ensure_svn() {
 	svn --version --quiet | awk -F. '{ exit !($1 > 1 || $2 >= 10) }' || die "svn 1.10 or newer is needed (--password-from-stdin)"
 }
 
+# The container image to use: --image, else the one GitHub Actions built for this checkout. Pulled if not present.
+ensure_image() {
+	[[ -z "$IMAGE_DIGEST" ]] || return 0
+	[[ -n "$IMAGE_REF" ]] || IMAGE_REF="$IMAGE_REPO:sha-$(git -C "$REPO" rev-parse --short=7 HEAD)"
+	if ! "$CONTAINER_ENGINE" image exists "$IMAGE_REF" 2> /dev/null; then
+		log "pulling $IMAGE_REF"
+		"$CONTAINER_ENGINE" pull --quiet "$IMAGE_REF" > /dev/null \
+			|| die "cannot pull $IMAGE_REF; has GitHub Actions built this commit? Otherwise give --image"
+	fi
+	IMAGE_DIGEST=$("$CONTAINER_ENGINE" image inspect --format '{{index .RepoDigests 0}}' "$IMAGE_REF" 2> /dev/null || true)
+	[[ -n "$IMAGE_DIGEST" ]] || IMAGE_DIGEST=$IMAGE_REF
+}
+
+# Subversion comes from the image; only a native run needs it installed here.
+prepare_svn() {
+	if [[ $NATIVE == true ]]; then ensure_svn; else ensure_image; fi
+}
+
 svn_auth() {
 	[[ -r "$SVN_PASSWORD_FILE" ]] || die "no SVN password file $SVN_PASSWORD_FILE; run setup"
-	svn --non-interactive --username "$SVN_USERNAME" --no-auth-cache --password-from-stdin "$@" < "$SVN_PASSWORD_FILE"
+	if [[ $NATIVE == true ]]; then
+		svn --non-interactive --username "$SVN_USERNAME" --no-auth-cache --password-from-stdin "$@" < "$SVN_PASSWORD_FILE"
+	else
+		ensure_image
+		# the working copy is mounted at its own path, so the arguments are the same as natively
+		mkdir -p "$OUTPUT_ROOT"
+		"$CONTAINER_ENGINE" run --rm -i --userns=keep-id:uid=10001,gid=10001 --security-opt label=disable \
+			-v "$OUTPUT_ROOT:$OUTPUT_ROOT" "$IMAGE_REF" sh -c 'exec svn "$@"' svn \
+			--non-interactive --username "$SVN_USERNAME" --no-auth-cache --password-from-stdin "$@" < "$SVN_PASSWORD_FILE"
+	fi
 }
 
 ask() { # ask VAR "question" default
@@ -140,7 +171,7 @@ setup() {
 	mkdir -p "$EPISIM_HOME"
 	chmod 700 "$EPISIM_HOME"
 	load_settings
-	ensure_svn
+	prepare_svn
 
 	ask SVN_USERNAME "SVN user name" "${SVN_USERNAME:-$USER}"
 	ask SVN_FOLDER "folder below $SVN_ROOT for the results" "${SVN_FOLDER:-$SVN_USERNAME}"
@@ -169,7 +200,7 @@ setup() {
 		svn_auth checkout --quiet --depth empty "$SVN_ROOT/$SVN_FOLDER" "$OUTPUT_ROOT"
 	fi
 
-	if [[ -z "$CONTAINER_ENGINE" ]]; then
+	if [[ $NATIVE == true ]]; then
 		build
 	else
 		log "using $CONTAINER_ENGINE for runs; run --native needs: $0 build"
@@ -177,10 +208,10 @@ setup() {
 	log "setup done; settings in $SETTINGS"
 }
 
-# run_container MEMORY IMAGE --scenario DIR ... -- ARGS...
+# run_container MEMORY --scenario DIR ... -- ARGS...
 run_container() {
-	local memory=$1 image=$2
-	shift 2
+	local memory=$1
+	shift
 	local scenarios=() args=()
 	while (( $# )) && [[ $1 != -- ]]; do
 		[[ $1 == --scenario ]] && scenarios+=("$2")
@@ -189,18 +220,9 @@ run_container() {
 	shift
 	args=("$@")
 
-	[[ -n "$image" ]] || image="$IMAGE_REPO:sha-$(git -C "$REPO" rev-parse --short=7 HEAD)"
-
-	ensure_svn
-	log "using $image"
-	if ! "$CONTAINER_ENGINE" image exists "$image" 2> /dev/null; then
-		"$CONTAINER_ENGINE" pull --quiet "$image" > /dev/null \
-			|| die "cannot pull $image; has GitHub Actions built this commit? Otherwise give --image"
-	fi
-	local digest
-	digest=$("$CONTAINER_ENGINE" image inspect --format '{{index .RepoDigests 0}}' "$image" 2> /dev/null || true)
-	[[ -n "$digest" ]] || digest=$image
-	local commit
+	ensure_image
+	local image=$IMAGE_REF digest=$IMAGE_DIGEST commit
+	log "using $digest"
 	commit=$("$CONTAINER_ENGINE" run --rm "$image" version | sed -n 's/^gitCommit=//p')
 
 	# scenarios of this repository are the image's own; other folders are mounted
@@ -230,10 +252,10 @@ run_container() {
 	log "RunInfluenza in $digest (commit ${commit:-unknown}): ${container_args[*]} ${args[*]:-} -> $SVN_ROOT/$SVN_FOLDER"
 	# the user of the host owns the files in /output: keep-id maps it to the uid of the image
 	"$CONTAINER_ENGINE" run --rm --userns=keep-id:uid=10001,gid=10001 --security-opt label=disable \
-		--hostname "$(hostname)" \
 		-v "$OUTPUT_ROOT:/output" \
 		-v "$SVN_PASSWORD_FILE:/run/secrets/svn-password:ro" \
 		${mounts[@]+"${mounts[@]}"} \
+		-e HOSTNAME="$(hostname)" \
 		-e SVN_USERNAME="$SVN_USERNAME" -e SVN_PASSWORD_FILE=/run/secrets/svn-password \
 		-e EPISIM_IMAGE="$digest" \
 		-e JAVA_TOOL_OPTIONS="-Xmx$memory -Djava.awt.headless=true" \
@@ -244,11 +266,10 @@ run() {
 	load_settings
 	[[ -n "${SVN_USERNAME:-}" && -n "${OUTPUT_ROOT:-}" ]] || die "not set up; run: $0 setup"
 
-	local memory=24g args=() scenarios=() native=false image=${EPISIM_IMAGE_REF:-}
-	[[ -n "$CONTAINER_ENGINE" ]] || native=true
+	local memory=24g args=() scenarios=()
 	while (( $# )); do
 		case $1 in
-			--native) native=true; shift; continue ;;
+			--native) NATIVE=true; shift; continue ;;
 			--scenario | --seeds | --infectiousness | --tasks | --task-threads | --memory | --resume | --image) [[ $# -ge 2 ]] || die "option $1 needs a value" ;;
 			*) die "unknown option $1" ;;
 		esac
@@ -256,7 +277,7 @@ run() {
 			--scenario) scenarios+=(--scenario "$2") ;;
 			--seeds | --infectiousness | --tasks | --task-threads | --resume) args+=("$1" "$2") ;;
 			--memory) memory=$2 ;;
-			--image) image=$2 ;;
+			--image) IMAGE_REF=$2 ;;
 		esac
 		shift 2
 	done
@@ -267,8 +288,8 @@ run() {
 		done
 	fi
 
-	if [[ $native == false ]]; then
-		run_container "$memory" "$image" "${scenarios[@]}" -- ${args[@]+"${args[@]}"}
+	if [[ $NATIVE == false ]]; then
+		run_container "$memory" "${scenarios[@]}" -- ${args[@]+"${args[@]}"}
 		return
 	fi
 
