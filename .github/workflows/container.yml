@@ -1,6 +1,9 @@
-# Builds the matsim-episim image and publishes it to ghcr.io/<owner>/matsim-episim.
+# Builds the matsim-episim image and publishes it to Docker Hub (docker.io/jarodocks/matsim-episim).
 # Tags: sha-<commit> for every build, the branch name, and the version for a v* tag (v2027.0 -> 2027.0). No latest.
 # The digest of the pushed image is in the job summary; use image@sha256:... to record a run.
+#
+# The push credentials are the secret DOCKERHUB_TOKEN (access token, Read & Write) and the variable DOCKERHUB_USERNAME
+# of the environment "release", which only the branches and tags below may use. Never trigger this on pull_request_target.
 name: container
 
 on:
@@ -11,31 +14,33 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 concurrency:
   group: container-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  IMAGE: docker.io/jarodocks/matsim-episim
+
 jobs:
   image:
     runs-on: ubuntu-latest
+    environment: release
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/matsim-episim
+          images: ${{ env.IMAGE }}
           flavor: latest=false
           tags: |
             type=sha,prefix=sha-,format=short
@@ -43,13 +48,16 @@ jobs:
             type=match,pattern=v(.*),group=1
 
       - id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # records in the registry which commit and workflow built the image, and what is inside
+          provenance: mode=max
+          sbom: true
           build-args: |
             GIT_COMMIT=${{ github.sha }}
             GIT_DIRTY=false
@@ -62,7 +70,7 @@ jobs:
           {
             echo "### Image"
             echo '```'
-            echo "ghcr.io/${{ github.repository_owner }}/matsim-episim@${{ steps.build.outputs.digest }}"
+            echo "${{ env.IMAGE }}@${{ steps.build.outputs.digest }}"
             echo '```'
             echo "commit \`${{ github.sha }}\`"
           } >> "$GITHUB_STEP_SUMMARY"

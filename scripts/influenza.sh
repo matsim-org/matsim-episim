@@ -15,7 +15,7 @@
 #   --memory SIZE           Java heap (default 24g); one 25 % run needs about 8 GB (Cologne) to 14 GB (Berlin)
 #   --resume DATE/RUN       finish a failed run without simulating again (e.g. 2026-09-25/00002); give the same
 #                           scenarios, seeds and infectiousness as the original run
-#   --image REF             container image (default: ghcr.io/matsim-org/matsim-episim:sha-<HEAD>, built by GitHub Actions;
+#   --image REF             container image (default: docker.io/jarodocks/matsim-episim:sha-<HEAD>, built by GitHub Actions;
 #                           give a ...@sha256:<digest> to repeat a run exactly)
 #   --native                run the jar built here instead of the container
 #
@@ -40,7 +40,7 @@ PASSWORD_FILE_DEFAULT="$EPISIM_HOME/svn-password"
 REPO=${EPISIM_REPO:-$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)}
 
 CONTAINER_ENGINE=${CONTAINER_ENGINE:-$(command -v podman || true)}
-IMAGE_REPO=${EPISIM_IMAGE_REPO:-ghcr.io/matsim-org/matsim-episim}
+IMAGE_REPO=${EPISIM_IMAGE_REPO:-docker.io/jarodocks/matsim-episim}
 
 die() { echo "error: $*" >&2; exit 1; }
 log() { echo "[$(date +%H:%M:%S)] $*"; }
