@@ -5,7 +5,7 @@ name: container
 
 on:
   push:
-    branches: [master, js/Influenza]
+    branches: [master, Influenza]
     tags: ['v*']
   workflow_dispatch:
 
