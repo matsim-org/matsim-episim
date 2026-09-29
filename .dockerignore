@@ -1,0 +1,10 @@
+.git
+.idea
+target
+output*
+battery
+*.jar
+airflow
+docs
+scripts/influenza-statistics
+Scenarios/*/analyze_run.py
