@@ -196,6 +196,19 @@
                                         <include>**</include>
                                     </includes>
                                 </filter>
+                                <!-- their operators are only named in META-INF/registryFile.imagen and loaded by reflection -->
+                                <filter>
+                                    <artifact>org.eclipse.imagen:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.geotools:gt-coverage</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
                                 <filter>
                                     <artifact>org.glassfish:*</artifact>
                                     <includes>

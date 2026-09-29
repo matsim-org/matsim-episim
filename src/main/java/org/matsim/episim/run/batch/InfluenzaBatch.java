@@ -10,12 +10,14 @@ import com.google.inject.Module;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
 import org.matsim.episim.BatchRun;
 import org.matsim.episim.analysis.FilterEvents;
 import org.matsim.episim.analysis.InfectionLocationsFromEvents;
 import org.matsim.episim.analysis.OutputAnalysis;
 import org.matsim.episim.analysis.RValuesFromEvents;
 import org.matsim.episim.analysis.SecondaryAttackRateFromEvents;
+import org.matsim.episim.VirusStrainConfigGroup;
 import org.matsim.episim.model.VirusStrain;
 import org.matsim.episim.run.modules.InfluenzaScenario;
 import org.matsim.episim.run.scenarios.InfluenzaParameterisation;
@@ -158,8 +160,13 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 
 		// fail before simulating, not after hours
 		List<ScenarioDescriptor> descriptors = new ArrayList<>();
-		for (Path scenario : scenarios)
+		// without --infectiousness each scenario runs its configured value, which is still a parameter of the run
+		List<String> configuredInfectiousness = new ArrayList<>();
+		for (Path scenario : scenarios) {
 			descriptors.add(descriptor(setup, scenario));
+			configuredInfectiousness.add(arguments.infectiousness() == null
+				? checkInfectiousness(params, configuredInfectiousness(setup)) : arguments.infectiousness());
+		}
 
 		boolean multiCity = descriptors.size() > 1;
 		if (multiCity) {
@@ -177,8 +184,10 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 		OutputPaths paths = arguments.resume() != null ? existingOutputPaths(configuredOutput, arguments.resume())
 			: createOutputPaths(configuredOutput);
 
-		for (ScenarioDescriptor descriptor : descriptors) {
+		for (int i = 0; i < descriptors.size(); i++) {
+			ScenarioDescriptor descriptor = descriptors.get(i);
 			System.setProperty(InfluenzaScenario.SCENARIO_PROPERTY, descriptor.directory().toString());
+			System.setProperty(INFECTIOUSNESS_PROPERTY, configuredInfectiousness.get(i));
 			OutputPaths scenarioPaths = multiCity ? paths.forScenario(subfolder(descriptor)) : paths;
 			String scenarioLabel = "Influenza " + descriptor.city() + " " + label;
 			if (arguments.resume() == null)
@@ -327,6 +336,13 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 			|| parseValues(selection).stream().anyMatch(v -> Math.abs(v - infectiousness) < 1e-9);
 	}
 
+	/** The influenza infectiousness in the config of the scenario that the scenario property names. */
+	private static String configuredInfectiousness(Class<? extends InfluenzaBatch<?>> setup) {
+		Config config = instantiate(setup).module().config();
+		return Double.toString(ConfigUtils.addOrGetModule(config, VirusStrainConfigGroup.class)
+			.getParams(INFLUENZA_STRAIN).getInfectiousness());
+	}
+
 	/** Checks the values against the {@code infectiousness} grid of the params class, so a typo fails before simulating. */
 	private static String checkInfectiousness(Class<?> params, String selection) {
 		Parameter grid;
@@ -341,7 +357,8 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 		List<Double> values = parseValues(selection);
 		for (double value : values)
 			if (Arrays.stream(grid.value()).noneMatch(v -> Math.abs(v - value) < 1e-9))
-				throw new IllegalArgumentException("infectiousness " + value + " is not on the grid " + Arrays.toString(grid.value()));
+				throw new IllegalArgumentException("infectiousness " + value + " is not on the grid " + Arrays.toString(grid.value())
+					+ "; give --infectiousness with values of the grid");
 		return selection;
 	}
 

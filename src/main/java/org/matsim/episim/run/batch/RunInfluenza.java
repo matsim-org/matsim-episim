@@ -5,35 +5,23 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.episim.VirusStrainConfigGroup;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 /**
  * The influenza season of one or more scenarios. With {@code --infectiousness} it runs those values of the strain
- * infectiousness (a slider in the viewer), otherwise the value in the scenario's config.
+ * infectiousness (a slider in the viewer), otherwise the value in the scenario's config, which has to be on the grid.
+ * Either way the infectiousness is a parameter of the run.
  */
-public class RunInfluenza extends InfluenzaBatch<Object> {
+public class RunInfluenza extends InfluenzaBatch<RunInfluenza.GridParams> {
 
 	@Override
-	public Config prepareConfig(int id, Object params) {
-		if (params instanceof GridParams grid) {
-			if (!isSelectedSeed(grid.seed) || !isSelectedInfectiousness(grid.infectiousness))
-				return null;
-			Config config = seasonConfig(grid.seed);
-			ConfigUtils.addOrGetModule(config, VirusStrainConfigGroup.class)
-				.getParams(INFLUENZA_STRAIN)
-				.setInfectiousness(grid.infectiousness);
-			return config;
-		}
-
-		Params plain = (Params) params;
-		if (!isSelectedSeed(plain.seed))
+	public Config prepareConfig(int id, GridParams params) {
+		if (!isSelectedSeed(params.seed) || !isSelectedInfectiousness(params.infectiousness))
 			return null;
-		return seasonConfig(plain.seed);
-	}
-
-	public static final class Params {
-		@GenerateSeeds(10)
-		public long seed;
+		Config config = seasonConfig(params.seed);
+		ConfigUtils.addOrGetModule(config, VirusStrainConfigGroup.class)
+			.getParams(INFLUENZA_STRAIN)
+			.setInfectiousness(params.infectiousness);
+		return config;
 	}
 
 	public static final class GridParams {
@@ -45,8 +33,7 @@ public class RunInfluenza extends InfluenzaBatch<Object> {
 	}
 
 	public static void main(String[] args) throws IOException, InterruptedException {
-		Class<?> params = Arrays.asList(args).contains("--infectiousness") ? GridParams.class : Params.class;
-		runBatch(RunInfluenza.class, params, args, "run");
+		runBatch(RunInfluenza.class, GridParams.class, args, "run");
 	}
 
 }
