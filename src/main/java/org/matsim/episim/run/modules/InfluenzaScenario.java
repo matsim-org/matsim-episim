@@ -2,6 +2,7 @@ package org.matsim.episim.run.modules;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.multibindings.Multibinder;
 import jakarta.inject.Singleton;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.core.config.Config;
@@ -10,8 +11,10 @@ import org.matsim.core.config.groups.VspExperimentalConfigGroup;
 import org.matsim.core.controler.ControllerUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.episim.EpisimConfigGroup;
+import org.matsim.episim.ImmunityConfigGroup;
 import org.matsim.episim.PathogenConfigGroup;
 import org.matsim.episim.TracingConfigGroup;
+import org.matsim.episim.VaccinationConfigGroup;
 import org.matsim.episim.VirusStrainConfigGroup;
 import org.matsim.episim.model.AgeAndProgressionDependentInfectionModelWithSeasonality;
 import org.matsim.episim.model.AntibodyModel;
@@ -73,6 +76,8 @@ public class InfluenzaScenario extends AbstractModule {
 		bind(InfectionModel.class).to(AgeAndProgressionDependentInfectionModelWithSeasonality.class).in(Singleton.class);
 		bind(DiseaseStatusTransitionModel.class).to(AgeDependentDiseaseStatusTransitionModel.class).in(Singleton.class);
 		bind(VaccinationModel.class).to(NoVaccination.class).in(Singleton.class);
+		// the immunity of the population at the start of the run; does nothing without a product in the config (D17)
+		Multibinder.newSetBinder(binder(), VaccinationModel.class).addBinding().to(PriorImmunityModel.class).in(Singleton.class);
 		bind(TestingModel.class).to(DefaultTestingModel.class).in(Singleton.class);
 		bind(ShutdownPolicy.class).to(FixedPolicy.class).in(Singleton.class);
 		bind(ActivityParticipationModel.class).to(DefaultParticipationModel.class);
@@ -92,9 +97,11 @@ public class InfluenzaScenario extends AbstractModule {
 			throw new IllegalArgumentException("No " + ScenarioDescriptor.CONFIG_FILE_NAME + " in scenario folder "
 				+ scenarioDirectory.toAbsolutePath() + "; run the scenario's GenerateInfluenzaConfig first");
 
-		// register episim's groups, otherwise MATSim rejects them as unmaterialized
+		// register episim's groups, otherwise MATSim rejects them as unmaterialized; the immunity group is absent from the
+		// single-season configs, where it stands for the legacy model, and is explicit in the multi-season config
 		Config config = ConfigUtils.loadConfig(file.toString(),
-				new EpisimConfigGroup(), new TracingConfigGroup(), new VirusStrainConfigGroup(), new PathogenConfigGroup());
+				new EpisimConfigGroup(), new TracingConfigGroup(), new VirusStrainConfigGroup(), new PathogenConfigGroup(),
+				new ImmunityConfigGroup(), new PriorImmunityConfigGroup(), new VaccinationConfigGroup());
 
 		// reject a config without a policy file instead of running without school holidays
 		String policy = ConfigUtils.addOrGetModule(config, EpisimConfigGroup.class).getPolicyConfig();

@@ -10,6 +10,10 @@
 #   --scenario DIR          repeatable; default: every Scenarios/*/scenario.yaml (one dashboard, a tab per city)
 #   --seeds N               seeds per parameter set (default 2, at most 10)
 #   --infectiousness LIST   e.g. 0.30,0.35,0.40; values from 0.10 to 1.00 in steps of 0.05 (default: the config's value)
+#   --gamma LIST            e.g. 0.6,0.8,1.0; the common factor of a multi-season scenario (Scenarios/*-multiseason), from 0.30 to
+#                           1.50 in steps of 0.05; with --gamma the run is RunInfluenzaGamma instead of RunInfluenza, and
+#                           --scenario is needed (the multi-season scenarios are not in the default list)
+#   --iterations N          only the first N days of the run (e.g. 238 for the first season of a multi-season scenario)
 #   --tasks N               runs in parallel (default 1)
 #   --task-threads N        threads per run, at least 2 (default: the cores divided by --tasks); changes the results
 #   --memory SIZE           Java heap (default 24g); one 25 % run needs about 8 GB (Cologne) to 14 GB (Berlin)
@@ -249,7 +253,9 @@ run_container() {
 	[[ -d "$OUTPUT_ROOT/$today" ]] && svn_auth update --quiet --set-depth immediates "$OUTPUT_ROOT/$today"
 
 	printf '%s\t%s\t%s\n' "$digest" "$commit" "$(date -u +%FT%TZ)" >> "$(dirname "$OUTPUT_ROOT")/run-images.log"
-	log "RunInfluenza in $digest (commit ${commit:-unknown}): ${container_args[*]} ${args[*]:-} -> $SVN_ROOT/$SVN_FOLDER"
+	local mode=influenza
+	[[ " ${args[*]:-} " == *" --gamma "* ]] && mode=influenza-gamma
+	log "$mode in $digest (commit ${commit:-unknown}): ${container_args[*]} ${args[*]:-} -> $SVN_ROOT/$SVN_FOLDER"
 	# the user of the host owns the files in /output: keep-id maps it to the uid of the image
 	"$CONTAINER_ENGINE" run --rm --userns=keep-id:uid=10001,gid=10001 --security-opt label=disable \
 		-v "$OUTPUT_ROOT:/output" \
@@ -259,7 +265,7 @@ run_container() {
 		-e SVN_USERNAME="$SVN_USERNAME" -e SVN_PASSWORD_FILE=/run/secrets/svn-password \
 		-e EPISIM_IMAGE="$digest" \
 		-e JAVA_TOOL_OPTIONS="-Xmx$memory -Djava.awt.headless=true" \
-		"$image" influenza "${container_args[@]}" ${args[@]+"${args[@]}"}
+		"$image" "$mode" "${container_args[@]}" ${args[@]+"${args[@]}"}
 }
 
 run() {
@@ -270,12 +276,12 @@ run() {
 	while (( $# )); do
 		case $1 in
 			--native) NATIVE=true; shift; continue ;;
-			--scenario | --seeds | --infectiousness | --tasks | --task-threads | --memory | --resume | --image) [[ $# -ge 2 ]] || die "option $1 needs a value" ;;
+			--scenario | --seeds | --infectiousness | --gamma | --iterations | --tasks | --task-threads | --memory | --resume | --image) [[ $# -ge 2 ]] || die "option $1 needs a value" ;;
 			*) die "unknown option $1" ;;
 		esac
 		case $1 in
 			--scenario) scenarios+=(--scenario "$2") ;;
-			--seeds | --infectiousness | --tasks | --task-threads | --resume) args+=("$1" "$2") ;;
+			--seeds | --infectiousness | --gamma | --iterations | --tasks | --task-threads | --resume) args+=("$1" "$2") ;;
 			--memory) memory=$2 ;;
 			--image) IMAGE_REF=$2 ;;
 		esac
@@ -284,6 +290,7 @@ run() {
 	if (( ${#scenarios[@]} == 0 )); then
 		local descriptor
 		for descriptor in "$REPO"/Scenarios/*/scenario.yaml; do
+			[[ $(basename "$(dirname "$descriptor")") == *-multiseason ]] && continue
 			scenarios+=(--scenario "Scenarios/$(basename "$(dirname "$descriptor")")")
 		done
 	fi
@@ -305,10 +312,12 @@ run() {
 	today=$(date +%F)
 	[[ -d "$OUTPUT_ROOT/$today" ]] && svn_auth update --quiet --set-depth immediates "$OUTPUT_ROOT/$today"
 
-	log "RunInfluenza ${scenarios[*]} ${args[*]:-} -> $SVN_ROOT/$SVN_FOLDER"
+	local batch=RunInfluenza
+	[[ " ${args[*]:-} " == *" --gamma "* ]] && batch=RunInfluenzaGamma
+	log "$batch ${scenarios[*]} ${args[*]:-} -> $SVN_ROOT/$SVN_FOLDER"
 	cd "$REPO"
 	EPISIM_OUTPUT="$OUTPUT_ROOT" SVN_USERNAME="$SVN_USERNAME" SVN_PASSWORD_FILE="$SVN_PASSWORD_FILE" \
-		"$JAVA" "-Xmx$memory" -cp "$jar" org.matsim.episim.run.batch.RunInfluenza "${scenarios[@]}" ${args[@]+"${args[@]}"}
+		"$JAVA" "-Xmx$memory" -cp "$jar" org.matsim.episim.run.batch."$batch" "${scenarios[@]}" ${args[@]+"${args[@]}"}
 }
 
 case ${1:-} in

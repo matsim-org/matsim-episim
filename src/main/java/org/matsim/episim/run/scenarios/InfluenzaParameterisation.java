@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
@@ -50,8 +51,37 @@ public final class InfluenzaParameterisation {
 	/** Closed during school holidays; kindergartens and universities stay open. */
 	public static final String[] SCHOOLS = {"educ_primary", "educ_secondary", "educ_tertiary", "educ_other"};
 
+	/**
+	 * Infectiousness of the pooled strain of the single-season scenarios: a calibration placeholder, which a batch replaces
+	 * by the values it runs.
+	 */
+	public static final double SINGLE_SEASON_INFECTIOUSNESS = 1.0;
+
+	/**
+	 * Age susceptibility of A(H3N2), the pooled strain of the single-season scenarios: 12-18 y hazard ratio 2.04 against
+	 * adults (Sauter 2026, doi:10.1038/s41467-026-76037-x); the other ages are not raised.
+	 */
+	public static final Map<Integer, Double> AGE_SUSCEPTIBILITY_H3N2 = Map.of(0, 1.0, 11, 1.0, 12, 2.04, 18, 2.04, 19, 1.0);
+
+	/**
+	 * A strain of a run: what distinguishes it from the other strains of the pathogen.
+	 *
+	 * @param strain            the strain, a member of {@link #INFLUENZA}
+	 * @param ageSusceptibility relative susceptibility by age (key: age, linear between the keys, the last value from the
+	 *                          last key on)
+	 * @param infectiousness    the infectiousness of the strain
+	 */
+	public record StrainSpec(VirusStrain strain, Map<Integer, Double> ageSusceptibility, double infectiousness) {
+	}
+
 	/** Residual fraction the COVID Cologne scenario used for closed schools, an assumption for holidays. */
 	public static final double HOLIDAY_SCHOOL_FRACTION = 0.2;
+
+	/**
+	 * Length of {@code recovered -> susceptible} in the single-season scenarios: protection halves only 3.5-7 y after
+	 * an infection (Ranjeva 2019, doi:10.1038/s41467-019-09652-6), so there is no reinfection within a season.
+	 */
+	public static final int SINGLE_SEASON_REFRACTORY_DAYS = 365;
 
 	/** ICU stay median 4 d, IQR 1-8 d (doi:10.3390/v17111467). */
 	private static final double ICU_LOS_SIGMA = Math.log(8.0 / 1.0) / (2 * 0.6745);
@@ -66,28 +96,62 @@ public final class InfluenzaParameterisation {
 	}
 
 	/**
-	 * Adds influenza to a city's base config and replaces any other import; outdoor fraction and policy are left to the
-	 * caller.
+	 * Adds influenza to a city's base config for the single season {@link #SEASON_START} to {@link #SEASON_END} and replaces
+	 * any other import; outdoor fraction and policy are left to the caller.
 	 */
 	public static void configure(Config config, Map<LocalDate, Integer> importSchedule) {
+		configure(config, importSchedule, SEASON_START, SINGLE_SEASON_REFRACTORY_DAYS);
+	}
+
+	/**
+	 * Adds influenza to a city's base config and replaces any other import; outdoor fraction and policy are left to the
+	 * caller.
+	 *
+	 * @param startDate      first day of the run, also the date of the zero SARS-CoV-2 import entry
+	 * @param refractoryDays days an agent stays in {@code recovered} before it is susceptible again
+	 */
+	public static void configure(Config config, Map<LocalDate, Integer> importSchedule, LocalDate startDate, int refractoryDays) {
+		// one pooled strain, A(H3N2)-dominated (ARE-Wochenbericht KW 44/2022, doi:10.25646/10757)
+		configure(config, List.of(new StrainSpec(INFLUENZA_STRAIN, AGE_SUSCEPTIBILITY_H3N2, SINGLE_SEASON_INFECTIOUSNESS)),
+				Map.of(INFLUENZA_STRAIN, importSchedule), startDate, refractoryDays);
+	}
+
+	/**
+	 * Adds influenza with several strains to a city's base config and replaces any other import; outdoor fraction and
+	 * policy are left to the caller. The pathogen, its natural history and its transmission are the same for all strains.
+	 *
+	 * @param strains         the strains, all of pathogen {@link #INFLUENZA}; the order is the order in the written config
+	 * @param importSchedules the import of every strain; a strain without one would be seeded with one infection a day
+	 * @param startDate       first day of the run, also the date of the zero SARS-CoV-2 import entry
+	 * @param refractoryDays  days an agent stays in {@code recovered} before it is susceptible again
+	 */
+	public static void configure(Config config, List<StrainSpec> strains, Map<VirusStrain, Map<LocalDate, Integer>> importSchedules,
+								 LocalDate startDate, int refractoryDays) {
+
+		for (StrainSpec spec : strains) {
+			if (!INFLUENZA.equals(spec.strain().getPathogen()))
+				throw new IllegalArgumentException("Strain " + spec.strain() + " is not a strain of " + INFLUENZA.getName());
+			if (!importSchedules.containsKey(spec.strain()))
+				throw new IllegalArgumentException("Strain " + spec.strain() + " has no import schedule; without one it would be "
+						+ "seeded with one infection a day");
+		}
 
 		EpisimConfigGroup episimConfig = ConfigUtils.addOrGetModule(config, EpisimConfigGroup.class);
 		VirusStrainConfigGroup virusStrainConfig = ConfigUtils.addOrGetModule(config, VirusStrainConfigGroup.class);
 		PathogenConfigGroup pathogenConfig = ConfigUtils.addOrGetModule(config, PathogenConfigGroup.class);
 
-		episimConfig.setStartDate(SEASON_START);
+		episimConfig.setStartDate(startDate);
 
-		// one pooled strain, A(H3N2)-dominated (ARE-Wochenbericht KW 44/2022, doi:10.25646/10757)
-		VirusStrainConfigGroup.StrainParams strain = virusStrainConfig.getOrAddParams(INFLUENZA_STRAIN);
-		strain.setPathogen(INFLUENZA);
-		// calibration placeholder
-		strain.setInfectiousness(1.0);
-		strain.setFactorSeriouslySick(1.0);
-		strain.setFactorCritical(1.0);
-		// 12-18 y HR 2.04 vs adults (Sauter 2026, doi:10.1038/s41467-026-76037-x)
-		strain.setAgeSusceptibility(Map.of(0, 1.0, 11, 1.0, 12, 2.04, 18, 2.04, 19, 1.0));
-		// no age effect (Cauchemez 2009, doi:10.1056/NEJMoa0905498)
-		strain.setAgeInfectivity(Map.of(0, 1.0));
+		for (StrainSpec spec : strains) {
+			VirusStrainConfigGroup.StrainParams strain = virusStrainConfig.getOrAddParams(spec.strain());
+			strain.setPathogen(INFLUENZA);
+			strain.setInfectiousness(spec.infectiousness());
+			strain.setFactorSeriouslySick(1.0);
+			strain.setFactorCritical(1.0);
+			strain.setAgeSusceptibility(spec.ageSusceptibility());
+			// no age effect (Cauchemez 2009, doi:10.1056/NEJMoa0905498)
+			strain.setAgeInfectivity(Map.of(0, 1.0));
+		}
 
 		// seriouslySick is divided by hospitalFactor, which the model multiplies back in
 		double hospitalFactor = episimConfig.getHospitalFactor();
@@ -114,14 +178,15 @@ public final class InfluenzaParameterisation {
 		// placeholder: the former built-in COVID curve (arXiv:2007.06602)
 		influenza.setInfectivityProfile(sampledNormal(0.5, 2.6, -8, 12));
 
-		episimConfig.setProgressionConfig(progressionConfig(Transition.config()).build());
+		episimConfig.setProgressionConfig(progressionConfig(Transition.config(), refractoryDays).build());
 
 		ConfigUtils.addOrGetModule(config, TracingConfigGroup.class).setPutTraceablePersonsInQuarantineAfterDay(Integer.MAX_VALUE);
 
 		episimConfig.getInfections_pers_per_day().clear();
-		episimConfig.setInfections_pers_per_day(INFLUENZA_STRAIN, importSchedule);
+		for (StrainSpec spec : strains)
+			episimConfig.setInfections_pers_per_day(spec.strain(), importSchedules.get(spec.strain()));
 		// explicit, otherwise an empty map falls back to 1 SARS-CoV-2 infection per day
-		episimConfig.setInfections_pers_per_day(VirusStrain.SARS_CoV_2, Map.of(SEASON_START, 0));
+		episimConfig.setInfections_pers_per_day(VirusStrain.SARS_CoV_2, Map.of(startDate, 0));
 
 		// no antibody parameters: influenza induces no antibodies, so the antibody severity factor stays 1
 	}
@@ -132,10 +197,18 @@ public final class InfluenzaParameterisation {
 	 */
 	public static Map<LocalDate, Integer> importSchedule(NavigableMap<LocalDate, Integer> weeklyCases, double perWeeklyCase,
 														 String source) {
+		return importSchedule(weeklyCases, perWeeklyCase, source, SEASON_START, SEASON_END);
+	}
+
+	/**
+	 * As {@link #importSchedule(NavigableMap, double, String)} for the days from {@code start} to {@code end}, both included.
+	 */
+	public static Map<LocalDate, Integer> importSchedule(NavigableMap<LocalDate, Integer> weeklyCases, double perWeeklyCase,
+														 String source, LocalDate start, LocalDate end) {
 		Map<LocalDate, Integer> schedule = new TreeMap<>();
 		double expected = 0;
 		long issued = 0;
-		for (LocalDate day = SEASON_START; !day.isAfter(SEASON_END); day = day.plusDays(1)) {
+		for (LocalDate day = start; !day.isAfter(end); day = day.plusDays(1)) {
 			LocalDate week = day.with(DayOfWeek.MONDAY);
 			Integer before = weeklyCases.get(week.minusWeeks(1));
 			Integer current = weeklyCases.get(week);
@@ -172,14 +245,41 @@ public final class InfluenzaParameterisation {
 		}
 	}
 
+	/**
+	 * {@link #weatherOutdoorFraction(String, String)} for the days from {@code from} to {@code to}, both included; the
+	 * helper itself continues with the average year for three years after the last day of the weather file.
+	 */
+	public static Map<LocalDate, Double> weatherOutdoorFraction(String weatherPath, String avgWeatherPath, LocalDate from, LocalDate to) {
+		Map<LocalDate, Double> days = new TreeMap<>();
+		weatherOutdoorFraction(weatherPath, avgWeatherPath).forEach((date, fraction) -> {
+			if (!date.isBefore(from) && !date.isAfter(to))
+				days.put(date, fraction);
+		});
+		return days;
+	}
+
 	public static void closeSchools(FixedPolicy.ConfigBuilder policy, String firstHoliday, String lastHoliday) {
-		policy.restrict(LocalDate.parse(firstHoliday), HOLIDAY_SCHOOL_FRACTION, SCHOOLS);
+		closeSchools(policy, firstHoliday, lastHoliday, HOLIDAY_SCHOOL_FRACTION);
+	}
+
+	/** As {@link #closeSchools(FixedPolicy.ConfigBuilder, String, String)} with the given remaining attendance. */
+	public static void closeSchools(FixedPolicy.ConfigBuilder policy, String firstHoliday, String lastHoliday, double fraction) {
+		policy.restrict(LocalDate.parse(firstHoliday), fraction, SCHOOLS);
 		policy.restrict(LocalDate.parse(lastHoliday).plusDays(1), 1.0, SCHOOLS);
 	}
 
 	/** The config can reference progression only as a file. */
 	public static void writeProgression(EpisimConfigGroup episimConfig, String progressionPath) throws IOException {
-		File progressionFile = new File(progressionPath);
+		writeProgression(episimConfig, Path.of(""), progressionPath);
+	}
+
+	/**
+	 * As {@link #writeProgression(EpisimConfigGroup, String)}, with the file below {@code outputRoot}. The config
+	 * references the file by the path resolved against {@code outputRoot}, which is {@code progressionPath} itself for the
+	 * empty root.
+	 */
+	public static void writeProgression(EpisimConfigGroup episimConfig, Path outputRoot, String progressionPath) throws IOException {
+		File progressionFile = outputRoot.resolve(progressionPath).toFile();
 		writeHocon(episimConfig.getProgressionConfig(), progressionFile);
 		episimConfig.setProgressionConfig(ConfigFactory.parseFile(progressionFile));
 	}
@@ -187,11 +287,20 @@ public final class InfluenzaParameterisation {
 	/** The config can reference the policy only as a file. */
 	public static void writePolicy(EpisimConfigGroup episimConfig, FixedPolicy.ConfigBuilder policy, String policyPath)
 			throws IOException {
-		writeHocon(policy.build(), new File(policyPath));
-		episimConfig.setPolicyConfig(policyPath);
+		writePolicy(episimConfig, policy, Path.of(""), policyPath);
+	}
+
+	/** As {@link #writePolicy(EpisimConfigGroup, FixedPolicy.ConfigBuilder, String)}, see {@link #writeProgression(EpisimConfigGroup, Path, String)}. */
+	public static void writePolicy(EpisimConfigGroup episimConfig, FixedPolicy.ConfigBuilder policy, Path outputRoot, String policyPath)
+			throws IOException {
+		String policyFile = outputRoot.resolve(policyPath).toString();
+		writeHocon(policy.build(), new File(policyFile));
+		episimConfig.setPolicyConfig(policyFile);
 	}
 
 	private static void writeHocon(com.typesafe.config.Config config, File file) throws IOException {
+		if (file.getParentFile() != null)
+			Files.createDirectories(file.getParentFile().toPath());
 		String rendered = config.root().render(ConfigRenderOptions.defaults().setOriginComments(false).setJson(false));
 		try (FileWriter writer = new FileWriter(file)) {
 			writer.write(rendered);
@@ -208,7 +317,15 @@ public final class InfluenzaParameterisation {
 		return profile;
 	}
 
+	/** The progression of the single-season scenarios, see {@link #SINGLE_SEASON_REFRACTORY_DAYS}. */
 	static Transition.Builder progressionConfig(Transition.Builder builder) {
+		return progressionConfig(builder, SINGLE_SEASON_REFRACTORY_DAYS);
+	}
+
+	/**
+	 * @param refractoryDays days in {@code recovered} before an agent is susceptible again
+	 */
+	static Transition.Builder progressionConfig(Transition.Builder builder, int refractoryDays) {
 
 		return builder
 				// latent period 0.5-1 d (Carrat 2008, doi:10.1093/aje/kwm375)
@@ -241,9 +358,10 @@ public final class InfluenzaParameterisation {
 				.from(EpisimPerson.DiseaseStatus.seriouslySickAfterCritical,
 						to(EpisimPerson.DiseaseStatus.recovered, Transition.logNormalWithMedianAndStd(7.0, 7.0)))
 
-				// protection halves after 3.5-7 y (Ranjeva 2019, doi:10.1038/s41467-019-09652-6): no reinfection in a season
+				// 365 d in the single-season scenarios: protection halves after 3.5-7 y (Ranjeva 2019,
+				// doi:10.1038/s41467-019-09652-6), so no reinfection in a season
 				.from(EpisimPerson.DiseaseStatus.recovered,
-						to(EpisimPerson.DiseaseStatus.susceptible, Transition.fixed(365)));
+						to(EpisimPerson.DiseaseStatus.susceptible, Transition.fixed(refractoryDays)));
 	}
 
 }

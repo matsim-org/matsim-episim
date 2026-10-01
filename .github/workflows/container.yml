@@ -8,7 +8,7 @@ name: container
 
 on:
   push:
-    branches: [master, Influenza]
+    branches: [master, Influenza, js/Influenza-multiseasonal]
     tags: ['v*']
   workflow_dispatch:
 

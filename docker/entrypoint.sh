@@ -9,6 +9,7 @@ usage() {
 	cat <<-USAGE
 	usage: <mode> [options]
 	  influenza [options]   influenza season (see --scenario, --seeds, --infectiousness, --tasks, --resume)
+	  influenza-gamma [options]  multi-season influenza, calibrated by the common factor (--scenario, --seeds, --gamma, --iterations, --tasks)
 	  run <class> [args]    any main class of the jar
 	  version               git commit and build date of this image
 	  sh                    a shell
@@ -22,6 +23,7 @@ mode=${1:-help}
 
 case $mode in
 	influenza) exec java -cp "$JAR" "$PKG.batch.RunInfluenza" "$@" ;;
+	influenza-gamma) exec java -cp "$JAR" "$PKG.batch.RunInfluenzaGamma" "$@" ;;
 	run) exec java -cp "$JAR" "$@" ;;
 	version) cat /opt/episim/BUILD_INFO ;;
 	sh | bash) exec "$mode" "$@" ;;

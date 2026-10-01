@@ -40,7 +40,6 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -64,19 +63,68 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 
 	static final VirusStrain INFLUENZA_STRAIN = InfluenzaParameterisation.INFLUENZA_STRAIN;
 
-	static final int ITERATIONS = (int) (ChronoUnit.DAYS.between(InfluenzaParameterisation.SEASON_START,
-		InfluenzaParameterisation.SEASON_END) + 1);
-
 	private static final int RUN_INDEX_WIDTH = 5;
 
 	/** Comma-separated infectiousness values to run, set from {@code --infectiousness}; all grid values if unset. */
 	static final String INFECTIOUSNESS_PROPERTY = "episim.infectiousness";
+
+	/** Comma-separated values of the common calibration factor to run, set from {@code --gamma}; all grid values if unset. */
+	static final String GAMMA_PROPERTY = "episim.gamma";
+
+	/** Number of days to run, set from {@code --iterations}; the whole run of the scenario if unset. */
+	static final String ITERATIONS_PROPERTY = "episim.iterations";
 
 	/** Comma-separated seeds to run, the first {@code --seeds} of the batch's generated ones. */
 	static final String SEEDS_PROPERTY = "episim.seeds";
 
 	/** Seeds run without {@code --seeds}; batches generate up to {@code @GenerateSeeds} of them. */
 	static final int DEFAULT_SEEDS = 2;
+
+	/**
+	 * The parameter that a batch is calibrated by: the infectiousness of the pooled strain ({@link RunInfluenza}), or a common
+	 * factor on the calibration parameter ({@link RunInfluenzaGamma}). A batch has the one whose name is a field of its params
+	 * class.
+	 */
+	enum Calibration {
+		INFECTIOUSNESS("infectiousness", "--infectiousness", INFECTIOUSNESS_PROPERTY),
+		GAMMA("gamma", "--gamma", GAMMA_PROPERTY);
+
+		private final String field;
+		private final String option;
+		private final String property;
+
+		Calibration(String field, String option, String property) {
+			this.field = field;
+			this.option = option;
+			this.property = property;
+		}
+
+		/** Name of the field of the params class, which carries the grid. */
+		String field() {
+			return field;
+		}
+
+		String option() {
+			return option;
+		}
+
+		/** System property that holds the selected values. */
+		String property() {
+			return property;
+		}
+
+		static Calibration of(Class<?> params) {
+			for (Calibration calibration : values()) {
+				try {
+					params.getField(calibration.field);
+					return calibration;
+				} catch (NoSuchFieldException e) {
+					// try the next one
+				}
+			}
+			throw new IllegalArgumentException(params.getName() + " has neither an infectiousness nor a gamma grid");
+		}
+	}
 
 	private ScenarioDescriptor descriptor;
 
@@ -108,18 +156,25 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 	@Override
 	public Metadata getMetadata() {
 		return Metadata.of(descriptor().city(), runName())
-			.withEndDate(InfluenzaParameterisation.SEASON_END.toString());
+			.withEndDate(endDate().toString());
+	}
+
+	/** Last day that is run: the end of the scenario, or earlier if {@code --iterations} asked for a prefix of the run. */
+	private LocalDate endDate() {
+		String iterations = System.getProperty(ITERATIONS_PROPERTY);
+		return iterations == null || iterations.isBlank() ? descriptor().end()
+			: descriptor().start().plusDays(Integer.parseInt(iterations.strip()) - 1L);
 	}
 
 	@Override
 	public LocalDate getDefaultStartDate() {
-		return InfluenzaParameterisation.SEASON_START;
+		return descriptor().start();
 	}
 
 	// no vaccination analyses (NoVaccination), no HospitalNumbersFromEvents (it resamples with SARS-CoV-2 parameters)
 	@Override
 	public Collection<OutputAnalysis> postProcessing() {
-		String startDate = InfluenzaParameterisation.SEASON_START.toString();
+		String startDate = descriptor().start().toString();
 		List<OutputAnalysis> analyses = new ArrayList<>(List.of(
 			new InfectionLocationsFromEvents(),
 			new RValuesFromEvents().withArgs("--start-date", startDate)));
@@ -138,21 +193,25 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 
 	/**
 	 * Arguments: {@code --scenario <folder>} (repeated or comma-separated), {@code --seeds <number>},
-	 * {@code --infectiousness <values>} (a subset of the batch's grid), {@code --tasks <runs in parallel>},
+	 * {@code --infectiousness <values>} or {@code --gamma <values>}, whichever the batch has (a subset of its grid),
+	 * {@code --iterations <days>} (only the first days of the run, for example 238 for the first season of the multi-season
+	 * scenario; the default is the whole run of the scenario), {@code --tasks <runs in parallel>},
 	 * {@code --task-threads <threads per run>} (default: the available cores shared among the tasks, see
 	 * {@link #defaultTaskThreads(int)}) and
 	 * {@code --resume <run directory>}: finishes a run whose simulations are done (post-processing, packing, commit)
-	 * without simulating again; it needs the same scenarios, seeds and infectiousness as the original run.
+	 * without simulating again; it needs the same scenarios, seeds, calibration values and iterations as the original run.
 	 * With several scenarios each gets a subfolder in the output directories, and covid-sim shows
 	 * {@code .../output-vis-no-seeds} as one dashboard with a tab per city. Nothing is committed unless all succeed.
 	 */
 	protected static void runBatch(Class<? extends InfluenzaBatch<?>> setup, Class<?> params, String[] args, String label)
 		throws IOException, InterruptedException {
 
+		Calibration calibration = Calibration.of(params);
 		Arguments arguments = parseArguments(args);
+		String selected = arguments.selection(calibration);
 		System.setProperty(SEEDS_PROPERTY, seeds(params, arguments.seeds() != null ? arguments.seeds() : DEFAULT_SEEDS));
-		if (arguments.infectiousness() != null)
-			System.setProperty(INFECTIOUSNESS_PROPERTY, checkInfectiousness(params, arguments.infectiousness()));
+		if (selected != null)
+			System.setProperty(calibration.property(), checkGrid(params, calibration, selected));
 
 		List<Path> scenarios = arguments.scenarios();
 		if (scenarios.isEmpty())
@@ -160,12 +219,14 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 
 		// fail before simulating, not after hours
 		List<ScenarioDescriptor> descriptors = new ArrayList<>();
-		// without --infectiousness each scenario runs its configured value, which is still a parameter of the run
-		List<String> configuredInfectiousness = new ArrayList<>();
+		// without the option each scenario runs its configured value, which is still a parameter of the run
+		List<String> configuredValues = new ArrayList<>();
+		List<Integer> iterations = new ArrayList<>();
 		for (Path scenario : scenarios) {
 			descriptors.add(descriptor(setup, scenario));
-			configuredInfectiousness.add(arguments.infectiousness() == null
-				? checkInfectiousness(params, configuredInfectiousness(setup)) : arguments.infectiousness());
+			iterations.add(iterationsOf(arguments.iterations(), descriptors.get(descriptors.size() - 1)));
+			configuredValues.add(selected == null
+				? checkGrid(params, calibration, configuredCalibration(setup, calibration)) : selected);
 		}
 
 		boolean multiCity = descriptors.size() > 1;
@@ -187,15 +248,19 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 		for (int i = 0; i < descriptors.size(); i++) {
 			ScenarioDescriptor descriptor = descriptors.get(i);
 			System.setProperty(InfluenzaScenario.SCENARIO_PROPERTY, descriptor.directory().toString());
-			System.setProperty(INFECTIOUSNESS_PROPERTY, configuredInfectiousness.get(i));
+			System.setProperty(calibration.property(), configuredValues.get(i));
+			if (arguments.iterations() == null)
+				System.clearProperty(ITERATIONS_PROPERTY);
+			else
+				System.setProperty(ITERATIONS_PROPERTY, Integer.toString(iterations.get(i)));
 			OutputPaths scenarioPaths = multiCity ? paths.forScenario(subfolder(descriptor)) : paths;
 			String scenarioLabel = "Influenza " + descriptor.city() + " " + label;
 			if (arguments.resume() == null)
-				runScenario(setup, params, descriptor, scenarioPaths, arguments.tasks(), threads, false, scenarioLabel);
+				runScenario(setup, params, descriptor, scenarioPaths, arguments.tasks(), threads, iterations.get(i), false, scenarioLabel);
 			else if (isPacked(scenarioPaths))
 				log.info("{} is packed already, skipping", scenarioPaths.simulation());
 			else
-				runScenario(setup, params, descriptor, scenarioPaths, arguments.tasks(), threads, true, scenarioLabel);
+				runScenario(setup, params, descriptor, scenarioPaths, arguments.tasks(), threads, iterations.get(i), true, scenarioLabel);
 		}
 
 		String cities = descriptors.stream().map(ScenarioDescriptor::city).collect(Collectors.joining(" + "));
@@ -204,7 +269,7 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 	}
 
 	private static void runScenario(Class<? extends InfluenzaBatch<?>> setup, Class<?> params, ScenarioDescriptor descriptor,
-									OutputPaths paths, int tasks, int threads, boolean postOnly, String label) throws IOException {
+									OutputPaths paths, int tasks, int threads, int iterations, boolean postOnly, String label) throws IOException {
 
 		ZonedDateTime startedAt = ZonedDateTime.now();
 		Path output = paths.simulation();
@@ -215,7 +280,7 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 			RunParallel.OPTION_PARAMS, params.getName(),
 			RunParallel.OPTION_TASKS, Integer.toString(tasks),
 			RunParallel.OPTION_TASK_THREADS, Integer.toString(threads),
-			RunParallel.OPTION_ITERATIONS, Integer.toString(ITERATIONS),
+			RunParallel.OPTION_ITERATIONS, Integer.toString(iterations),
 			RunParallel.OPTION_METADATA));
 		if (postOnly) {
 			if (!Files.isDirectory(output))
@@ -247,8 +312,36 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 		return descriptor.directory().toAbsolutePath().normalize().getFileName().toString();
 	}
 
-	record Arguments(List<Path> scenarios, @Nullable Integer seeds, @Nullable String infectiousness, int tasks,
-					 @Nullable Integer taskThreads, @Nullable String resume) {
+	/**
+	 * The number of days to run: the whole run of the scenario unless {@code --iterations} asks for fewer.
+	 *
+	 * @throws IllegalArgumentException if the request is below 1 or beyond the run of the scenario
+	 */
+	static int iterationsOf(@Nullable Integer requested, ScenarioDescriptor descriptor) {
+		if (requested == null)
+			return descriptor.iterations();
+		if (requested < 1 || requested > descriptor.iterations())
+			throw new IllegalArgumentException("--iterations " + requested + " is not between 1 and " + descriptor.iterations()
+				+ ", the days of the run of " + descriptor.directory());
+		return requested;
+	}
+
+	record Arguments(List<Path> scenarios, @Nullable Integer seeds, @Nullable String infectiousness, @Nullable String gamma,
+					 @Nullable Integer iterations, int tasks, @Nullable Integer taskThreads, @Nullable String resume) {
+
+		/**
+		 * The values given for the calibration of the batch, {@code null} if none; an option of the other calibration is an
+		 * error, since it would be ignored.
+		 */
+		@Nullable
+		String selection(Calibration calibration) {
+			String other = calibration == Calibration.INFECTIOUSNESS ? gamma : infectiousness;
+			Calibration otherCalibration = calibration == Calibration.INFECTIOUSNESS ? Calibration.GAMMA : Calibration.INFECTIOUSNESS;
+			if (other != null)
+				throw new IllegalArgumentException("This batch has no " + otherCalibration.field() + " grid; use "
+					+ calibration.option() + " instead of " + otherCalibration.option());
+			return calibration == Calibration.INFECTIOUSNESS ? infectiousness : gamma;
+		}
 	}
 
 	/**
@@ -264,6 +357,8 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 		List<Path> scenarios = new ArrayList<>();
 		Integer seeds = null;
 		String infectiousness = null;
+		String gamma = null;
+		Integer iterations = null;
 		String resume = null;
 		Integer taskThreads = null;
 		int tasks = 1;
@@ -279,6 +374,8 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 				}
 				case "--seeds" -> seeds = Integer.parseInt(value);
 				case "--infectiousness" -> infectiousness = value;
+				case "--gamma" -> gamma = value;
+				case "--iterations" -> iterations = Integer.parseInt(value);
 				case "--tasks" -> tasks = Integer.parseInt(value);
 				case "--task-threads" -> taskThreads = Integer.parseInt(value);
 				case "--resume" -> resume = value;
@@ -290,12 +387,12 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 		// see defaultTaskThreads why 1 is not allowed
 		if (taskThreads != null && taskThreads < 2)
 			throw new IllegalArgumentException("--task-threads must be at least 2");
-		return new Arguments(scenarios, seeds, infectiousness, tasks, taskThreads, resume);
+		return new Arguments(scenarios, seeds, infectiousness, gamma, iterations, tasks, taskThreads, resume);
 	}
 
 	private static IllegalArgumentException usage(String[] args) {
 		return new IllegalArgumentException("Unexpected arguments " + String.join(" ", args)
-			+ "; usage: --scenario Scenarios/<City> [--scenario ...] [--seeds N] [--infectiousness 0.3,0.35] [--tasks N]"
+			+ "; usage: --scenario Scenarios/<City> [--scenario ...] [--seeds N] [--infectiousness 0.3,0.35 | --gamma 0.8,1.0] [--iterations N] [--tasks N]"
 			+ " [--task-threads N] [--resume <run dir>]");
 	}
 
@@ -331,34 +428,48 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 
 	/** Whether this infectiousness was asked for with {@code --infectiousness}; batches return no config otherwise. */
 	protected static boolean isSelectedInfectiousness(double infectiousness) {
-		String selection = System.getProperty(INFECTIOUSNESS_PROPERTY);
-		return selection == null || selection.isBlank()
-			|| parseValues(selection).stream().anyMatch(v -> Math.abs(v - infectiousness) < 1e-9);
+		return isSelected(INFECTIOUSNESS_PROPERTY, infectiousness);
 	}
 
-	/** The influenza infectiousness in the config of the scenario that the scenario property names. */
-	private static String configuredInfectiousness(Class<? extends InfluenzaBatch<?>> setup) {
+	/** Whether this factor was asked for with {@code --gamma}; batches return no config otherwise. */
+	protected static boolean isSelectedGamma(double gamma) {
+		return isSelected(GAMMA_PROPERTY, gamma);
+	}
+
+	private static boolean isSelected(String property, double value) {
+		String selection = System.getProperty(property);
+		return selection == null || selection.isBlank()
+			|| parseValues(selection).stream().anyMatch(v -> Math.abs(v - value) < 1e-9);
+	}
+
+	/**
+	 * The value of the calibration that the config of the scenario, named by the scenario property, stands for: the
+	 * infectiousness of the pooled strain, or 1.0 for the factor (the config holds the calibration parameter itself).
+	 */
+	private static String configuredCalibration(Class<? extends InfluenzaBatch<?>> setup, Calibration calibration) {
+		if (calibration == Calibration.GAMMA)
+			return "1.0";
 		Config config = instantiate(setup).module().config();
 		return Double.toString(ConfigUtils.addOrGetModule(config, VirusStrainConfigGroup.class)
 			.getParams(INFLUENZA_STRAIN).getInfectiousness());
 	}
 
-	/** Checks the values against the {@code infectiousness} grid of the params class, so a typo fails before simulating. */
-	private static String checkInfectiousness(Class<?> params, String selection) {
+	/** Checks the values against the grid of the params class, so a typo fails before simulating. */
+	private static String checkGrid(Class<?> params, Calibration calibration, String selection) {
 		Parameter grid;
 		try {
-			grid = params.getField("infectiousness").getAnnotation(Parameter.class);
+			grid = params.getField(calibration.field()).getAnnotation(Parameter.class);
 		} catch (NoSuchFieldException e) {
 			grid = null;
 		}
 		if (grid == null)
-			throw new IllegalArgumentException(params.getName() + " has no infectiousness grid");
+			throw new IllegalArgumentException(params.getName() + " has no " + calibration.field() + " grid");
 
 		List<Double> values = parseValues(selection);
 		for (double value : values)
 			if (Arrays.stream(grid.value()).noneMatch(v -> Math.abs(v - value) < 1e-9))
-				throw new IllegalArgumentException("infectiousness " + value + " is not on the grid " + Arrays.toString(grid.value())
-					+ "; give --infectiousness with values of the grid");
+				throw new IllegalArgumentException(calibration.field() + " " + value + " is not on the grid " + Arrays.toString(grid.value())
+					+ "; give " + calibration.option() + " with values of the grid");
 		return selection;
 	}
 

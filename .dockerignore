@@ -8,3 +8,4 @@ airflow
 docs
 scripts/influenza-statistics
 Scenarios/*/analyze_run.py
+Scenarios/*/raw
