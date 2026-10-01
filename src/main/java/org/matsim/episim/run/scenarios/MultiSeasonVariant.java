@@ -2,7 +2,8 @@ package org.matsim.episim.run.scenarios;
 
 /**
  * The levers of the multi-season scenario that sensitivity runs change (docs/influenza-multiseasonal.md, sections 6.3 and 12);
- * {@link #BASE} is the scenario of the decision log.
+ * {@link #BASE} is the scenario of the decision log with the values found on Cologne in trial runs 15 to 19 (decision D18): factor 0.5 on the
+ * infectiousness of B/Victoria, relation 0.5 of the two A(H1N1)pdm09 strains, all half-lives halved.
  *
  * @param holidaySchoolFraction   remaining attendance of the schools in the school holidays; 0.2 is the assumption of the COVID
  *                                Cologne scenario (A38)
@@ -15,7 +16,7 @@ package org.matsim.episim.run.scenarios;
  * @param priorBMaxShare          share of the adults who carry B/Victoria immunity on the first day (D17, A39); 0 switches the
  *                                prior immunity off
  * @param bvicInfectiousnessFactor factor on the infectiousness of B/Victoria relative to the other strains (Q26 option a); 1.0
- *                                keeps all strains equal (D13)
+ *                                keeps all strains equal (D13); the base has 0.5 (D18)
  * @param immunity                the parameters of the immunity curves (section 5); {@code priorBMaxShare} of them is replaced by
  *                                the field above
  */
@@ -24,8 +25,8 @@ public record MultiSeasonVariant(double holidaySchoolFraction, boolean weatherOu
 								 MultiSeasonImmunity.Parameters immunity) {
 
 	public static final MultiSeasonVariant BASE = new MultiSeasonVariant(InfluenzaParameterisation.HOLIDAY_SCHOOL_FRACTION, true, 1.0, 1.0,
-			MultiSeasonImmunity.Parameters.defaults().priorBMaxShare(), 1.0,
-			MultiSeasonImmunity.Parameters.defaults());
+			MultiSeasonImmunity.Parameters.defaults().priorBMaxShare(), 0.5,
+			MultiSeasonImmunity.Parameters.defaults().withH1n1Pair(0.5).withHalfLifeScale(0.5));
 
 	public MultiSeasonVariant {
 		if (holidaySchoolFraction < 0 || holidaySchoolFraction > 1 || christmasWorkFraction < 0 || christmasWorkFraction > 1)

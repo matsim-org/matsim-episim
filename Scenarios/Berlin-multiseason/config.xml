@@ -394,12 +394,12 @@
 			<param name="sourceKind" value="infection" />
 			<parameterset type="protection" >
 				<param name="against" value="infectedButNotContagious" />
-				<param name="curve" value="0>0.9|365>0.76|730>0.6418|1095>0.542|1460>0.4577" />
+				<param name="curve" value="0>0.9|365>0.6418|730>0.4577|1095>0.3264|1460>0.2327" />
 				<param name="strain" value="H3N2_2022_23" />
 			</parameterset>
 			<parameterset type="protection" >
 				<param name="against" value="showingSymptoms" />
-				<param name="curve" value="0>0.9|365>0.76|730>0.6418|1095>0.542|1460>0.4577" />
+				<param name="curve" value="0>0.9|365>0.6418|730>0.4577|1095>0.3264|1460>0.2327" />
 				<param name="strain" value="H3N2_2022_23" />
 			</parameterset>
 			<parameterset type="protection" >
@@ -474,12 +474,12 @@
 			</parameterset>
 			<parameterset type="protection" >
 				<param name="against" value="infectedButNotContagious" />
-				<param name="curve" value="0>0.36|365>0.304|730>0.2567|1095>0.2168|1460>0.1831" />
+				<param name="curve" value="0>0.36|365>0.2567|730>0.1831|1095>0.1305|1460>0.0931" />
 				<param name="strain" value="H3N2K_2025_26" />
 			</parameterset>
 			<parameterset type="protection" >
 				<param name="against" value="showingSymptoms" />
-				<param name="curve" value="0>0.36|365>0.304|730>0.2567|1095>0.2168|1460>0.1831" />
+				<param name="curve" value="0>0.36|365>0.2567|730>0.1831|1095>0.1305|1460>0.0931" />
 				<param name="strain" value="H3N2K_2025_26" />
 			</parameterset>
 			<parameterset type="protection" >
@@ -518,12 +518,12 @@
 			</parameterset>
 			<parameterset type="protection" >
 				<param name="against" value="infectedButNotContagious" />
-				<param name="curve" value="0>0.9|365>0.8076|730>0.7247|1095>0.6503|1460>0.5836" />
+				<param name="curve" value="0>0.9|365>0.7247|730>0.5836|1095>0.4699|1460>0.3784" />
 				<param name="strain" value="BVic" />
 			</parameterset>
 			<parameterset type="protection" >
 				<param name="against" value="showingSymptoms" />
-				<param name="curve" value="0>0.9|365>0.8076|730>0.7247|1095>0.6503|1460>0.5836" />
+				<param name="curve" value="0>0.9|365>0.7247|730>0.5836|1095>0.4699|1460>0.3784" />
 				<param name="strain" value="BVic" />
 			</parameterset>
 			<parameterset type="protection" >
@@ -642,12 +642,12 @@
 			</parameterset>
 			<parameterset type="protection" >
 				<param name="against" value="infectedButNotContagious" />
-				<param name="curve" value="0>0.9|365>0.8076|730>0.7247|1095>0.6503|1460>0.5836" />
+				<param name="curve" value="0>0.9|365>0.7247|730>0.5836|1095>0.4699|1460>0.3784" />
 				<param name="strain" value="H1N1pdm09_2023_24" />
 			</parameterset>
 			<parameterset type="protection" >
 				<param name="against" value="showingSymptoms" />
-				<param name="curve" value="0>0.9|365>0.8076|730>0.7247|1095>0.6503|1460>0.5836" />
+				<param name="curve" value="0>0.9|365>0.7247|730>0.5836|1095>0.4699|1460>0.3784" />
 				<param name="strain" value="H1N1pdm09_2023_24" />
 			</parameterset>
 			<parameterset type="protection" >
@@ -662,12 +662,12 @@
 			</parameterset>
 			<parameterset type="protection" >
 				<param name="against" value="infectedButNotContagious" />
-				<param name="curve" value="0>0.9|365>0.8076|730>0.7247|1095>0.6503|1460>0.5836" />
+				<param name="curve" value="0>0.45|365>0.3624|730>0.2918|1095>0.235|1460>0.1892" />
 				<param name="strain" value="H1N1pdm09_2024_25" />
 			</parameterset>
 			<parameterset type="protection" >
 				<param name="against" value="showingSymptoms" />
-				<param name="curve" value="0>0.9|365>0.8076|730>0.7247|1095>0.6503|1460>0.5836" />
+				<param name="curve" value="0>0.45|365>0.3624|730>0.2918|1095>0.235|1460>0.1892" />
 				<param name="strain" value="H1N1pdm09_2024_25" />
 			</parameterset>
 			<parameterset type="protection" >
@@ -746,12 +746,12 @@
 			</parameterset>
 			<parameterset type="protection" >
 				<param name="against" value="infectedButNotContagious" />
-				<param name="curve" value="0>0.9|365>0.8076|730>0.7247|1095>0.6503|1460>0.5836" />
+				<param name="curve" value="0>0.45|365>0.3624|730>0.2918|1095>0.235|1460>0.1892" />
 				<param name="strain" value="H1N1pdm09_2023_24" />
 			</parameterset>
 			<parameterset type="protection" >
 				<param name="against" value="showingSymptoms" />
-				<param name="curve" value="0>0.9|365>0.8076|730>0.7247|1095>0.6503|1460>0.5836" />
+				<param name="curve" value="0>0.45|365>0.3624|730>0.2918|1095>0.235|1460>0.1892" />
 				<param name="strain" value="H1N1pdm09_2023_24" />
 			</parameterset>
 			<parameterset type="protection" >
@@ -766,12 +766,12 @@
 			</parameterset>
 			<parameterset type="protection" >
 				<param name="against" value="infectedButNotContagious" />
-				<param name="curve" value="0>0.9|365>0.8076|730>0.7247|1095>0.6503|1460>0.5836" />
+				<param name="curve" value="0>0.9|365>0.7247|730>0.5836|1095>0.4699|1460>0.3784" />
 				<param name="strain" value="H1N1pdm09_2024_25" />
 			</parameterset>
 			<parameterset type="protection" >
 				<param name="against" value="showingSymptoms" />
-				<param name="curve" value="0>0.9|365>0.8076|730>0.7247|1095>0.6503|1460>0.5836" />
+				<param name="curve" value="0>0.9|365>0.7247|730>0.5836|1095>0.4699|1460>0.3784" />
 				<param name="strain" value="H1N1pdm09_2024_25" />
 			</parameterset>
 			<parameterset type="protection" >
@@ -810,12 +810,12 @@
 			<param name="sourceKind" value="infection" />
 			<parameterset type="protection" >
 				<param name="against" value="infectedButNotContagious" />
-				<param name="curve" value="0>0.36|365>0.304|730>0.2567|1095>0.2168|1460>0.1831" />
+				<param name="curve" value="0>0.36|365>0.2567|730>0.1831|1095>0.1305|1460>0.0931" />
 				<param name="strain" value="H3N2_2022_23" />
 			</parameterset>
 			<parameterset type="protection" >
 				<param name="against" value="showingSymptoms" />
-				<param name="curve" value="0>0.36|365>0.304|730>0.2567|1095>0.2168|1460>0.1831" />
+				<param name="curve" value="0>0.36|365>0.2567|730>0.1831|1095>0.1305|1460>0.0931" />
 				<param name="strain" value="H3N2_2022_23" />
 			</parameterset>
 			<parameterset type="protection" >
@@ -890,12 +890,12 @@
 			</parameterset>
 			<parameterset type="protection" >
 				<param name="against" value="infectedButNotContagious" />
-				<param name="curve" value="0>0.9|365>0.76|730>0.6418|1095>0.542|1460>0.4577" />
+				<param name="curve" value="0>0.9|365>0.6418|730>0.4577|1095>0.3264|1460>0.2327" />
 				<param name="strain" value="H3N2K_2025_26" />
 			</parameterset>
 			<parameterset type="protection" >
 				<param name="against" value="showingSymptoms" />
-				<param name="curve" value="0>0.9|365>0.76|730>0.6418|1095>0.542|1460>0.4577" />
+				<param name="curve" value="0>0.9|365>0.6418|730>0.4577|1095>0.3264|1460>0.2327" />
 				<param name="strain" value="H3N2K_2025_26" />
 			</parameterset>
 			<parameterset type="protection" >
@@ -934,12 +934,12 @@
 			</parameterset>
 			<parameterset type="protection" >
 				<param name="against" value="infectedButNotContagious" />
-				<param name="curve" value="0>0.6503|365>0.5836|730>0.5237|1095>0.4699|1460>0.4217" />
+				<param name="curve" value="0>0.4699|365>0.3784|730>0.3047|1095>0.2454|1460>0.1976" />
 				<param name="strain" value="BVic" />
 			</parameterset>
 			<parameterset type="protection" >
 				<param name="against" value="showingSymptoms" />
-				<param name="curve" value="0>0.6503|365>0.5836|730>0.5237|1095>0.4699|1460>0.4217" />
+				<param name="curve" value="0>0.4699|365>0.3784|730>0.3047|1095>0.2454|1460>0.1976" />
 				<param name="strain" value="BVic" />
 			</parameterset>
 			<parameterset type="protection" >
@@ -1502,7 +1502,7 @@
 			<param name="factorCritical" value="1.0" />
 			<param name="factorSeriouslySick" value="1.0" />
 			<param name="factorSeriouslySickVaccinated" value="1.0" />
-			<param name="infectiousness" value="0.3" />
+			<param name="infectiousness" value="0.15" />
 			<param name="pathogen" value="influenza" />
 			<param name="strain" value="BVic" />
 		</parameterset>
