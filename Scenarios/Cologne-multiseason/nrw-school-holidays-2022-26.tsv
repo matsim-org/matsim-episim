@@ -1,0 +1,27 @@
+# School holidays of Nordrhein-Westfalen, first and last day of each holiday (KMK convention: both days are holidays).
+# Source: Kultusministerkonferenz, "Ferien im Schuljahr 2022/2023", "2023/2024", "2024/2025", "2025/2026", row Nordrhein-Westfalen,
+#   https://www.kmk.org/fileadmin/Dateien/pdf/Ferienkalender/FER2022_23-neu.pdf (Stand 16.01.2020),
+#   FER2023_24-neu.pdf (Stand 22.09.2020), FER2024_25.pdf (Stand 17.05.2023), FER2025_26.pdf (Stand 09.10.2025); retrieved 2026-09-30T11:59:59Z.
+# whit_day is the single day given under "Himmelfahrt/Pfingsten". The "bewegliche Ferientage" (3 to 4 per school year) are set by
+#   each school and are not in the file. Summer 2026 (20.07.-01.09.2026) lies after the horizon and is left out.
+# 2025/26 autumn, Christmas and Easter agree with Scenarios/Cologne/policy.conf.
+school_year	holiday	first_day	last_day
+2022/23	autumn	2022-10-04	2022-10-15
+2022/23	christmas	2022-12-23	2023-01-06
+2022/23	easter	2023-04-03	2023-04-15
+2022/23	whit_day	2023-05-30	2023-05-30
+2022/23	summer	2023-06-22	2023-08-04
+2023/24	autumn	2023-10-02	2023-10-14
+2023/24	christmas	2023-12-21	2024-01-05
+2023/24	easter	2024-03-25	2024-04-06
+2023/24	whit_day	2024-05-21	2024-05-21
+2023/24	summer	2024-07-08	2024-08-20
+2024/25	autumn	2024-10-14	2024-10-26
+2024/25	christmas	2024-12-23	2025-01-06
+2024/25	easter	2025-04-14	2025-04-26
+2024/25	whit_day	2025-06-10	2025-06-10
+2024/25	summer	2025-07-14	2025-08-26
+2025/26	autumn	2025-10-13	2025-10-25
+2025/26	christmas	2025-12-22	2026-01-06
+2025/26	easter	2026-03-30	2026-04-11
+2025/26	whit_day	2026-05-26	2026-05-26

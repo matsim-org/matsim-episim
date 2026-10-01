@@ -1,0 +1,22 @@
+# Influenza multi-season scenario Cologne 2022/23 to 2025/26, read by the influenza batches (see ScenarioDescriptor).
+# config.xml, progression.conf and policy.conf are written by org.matsim.episim.run.scenarios.cologne.GenerateInfluenzaConfig
+# (argument cologne-multiseason). start and end are the first and the last day of the run: Monday of KW39/2022 to Sunday of
+# KW20/2026.
+city: Köln
+country: DE
+region: Nordrhein-Westfalen
+start: 2022-09-26
+end: 2026-05-17
+observed:
+  - name: Influenza notifications NRW (RKI IfSG)
+    file: nrw-ifsg-influenza-2022-26.tsv
+    value: cases
+    unit: count
+    # Fallzahl / Inzidenz of the RKI series in the four seasons
+    population: 18041000
+    plot: casCom
+  - name: Influenza SARI hospitalisations Germany (RKI ICOSARI)
+    file: germany-icosari-influenza-sari-2022-26.tsv
+    value: incidence
+    unit: per100k
+    plot: hospNewCas

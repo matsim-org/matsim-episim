@@ -1,0 +1,36 @@
+# School holidays of Berlin, first and last day of each holiday (KMK convention: both days are holidays).
+# Source: Kultusministerkonferenz, "Ferien im Schuljahr 2022/2023", "2023/2024", "2024/2025", "2025/2026", row Berlin,
+#   https://www.kmk.org/fileadmin/Dateien/pdf/Ferienkalender/FER2022_23-neu.pdf, FER2023_24-neu.pdf, FER2024_25.pdf, FER2025_26.pdf
+#   (copies in raw/); retrieved 2026-10-01. Read from the one-page tables; the single days of the column "Himmelfahrt/Pfingsten" and
+#   the single autumn days (2.10.2023, 4.10.2024) are bridge days, named bridge_day. Berlin has a winter holiday of one week in February.
+# The "bewegliche Ferientage" of individual schools are not in the file. Summer 2026 (09.07.-22.08.2026) lies after the horizon and is left out.
+# The layout of the tables has the Berlin entries on several lines; the dates were checked against the Brandenburg row next to them.
+school_year	holiday	first_day	last_day
+2022/23	autumn	2022-10-24	2022-11-05
+2022/23	christmas	2022-12-22	2023-01-02
+2022/23	winter	2023-01-30	2023-02-04
+2022/23	easter	2023-04-03	2023-04-14
+2022/23	bridge_day	2023-05-19	2023-05-19
+2022/23	bridge_day	2023-05-30	2023-05-30
+2022/23	summer	2023-07-13	2023-08-25
+2023/24	bridge_day	2023-10-02	2023-10-02
+2023/24	autumn	2023-10-23	2023-11-04
+2023/24	christmas	2023-12-23	2024-01-05
+2023/24	winter	2024-02-05	2024-02-10
+2023/24	easter	2024-03-25	2024-04-05
+2023/24	bridge_day	2024-05-10	2024-05-10
+2023/24	summer	2024-07-18	2024-08-30
+2024/25	bridge_day	2024-10-04	2024-10-04
+2024/25	autumn	2024-10-21	2024-11-02
+2024/25	christmas	2024-12-23	2024-12-31
+2024/25	winter	2025-02-03	2025-02-08
+2024/25	easter	2025-04-14	2025-04-25
+2024/25	bridge_day	2025-05-02	2025-05-02
+2024/25	bridge_day	2025-05-30	2025-05-30
+2024/25	summer	2025-07-24	2025-09-06
+2025/26	autumn	2025-10-20	2025-11-01
+2025/26	christmas	2025-12-22	2026-01-02
+2025/26	winter	2026-02-02	2026-02-07
+2025/26	easter	2026-03-30	2026-04-10
+2025/26	bridge_day	2026-05-15	2026-05-15
+2025/26	bridge_day	2026-05-26	2026-05-26
