@@ -10,7 +10,7 @@
 #   --scenario DIR          repeatable; default: every Scenarios/*/scenario.yaml (one dashboard, a tab per city)
 #   --seeds N               seeds per parameter set (default 2, at most 10)
 #   --infectiousness LIST   e.g. 0.30,0.35,0.40; values from 0.10 to 1.00 in steps of 0.05 (default: the config's value)
-#   --gamma LIST            e.g. 0.6,0.8,1.0; the common factor of a multi-season scenario (Scenarios/*-multiseason), from 0.30 to
+#   --gamma LIST            e.g. 0.6,0.8,1.0; the common factor of a multi-season scenario (Scenarios/*-multiseason), from 0.05 to
 #                           1.50 in steps of 0.05; with --gamma the run is RunInfluenzaGamma instead of RunInfluenza, and
 #                           --scenario is needed (the multi-season scenarios are not in the default list)
 #   --iterations N          only the first N days of the run (e.g. 238 for the first season of a multi-season scenario)
