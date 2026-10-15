@@ -1,0 +1,42 @@
+# Seasonal influenza vaccination coverage by age band, Berlin (SK Berlin, key 11000), seasons 2022/23 to 2025/26.
+# Source: RKI KV-Impfsurveillance, claims data of the statutory insurance physicians (statutory insured only), 1 dose;
+#   Rieck et al. 2025, "Inanspruchnahme von Routineimpfungen in Deutschland", Zenodo, doi:10.5281/zenodo.18197755, file
+#   KVIS_Impfquoten_Erwachsene.tsv, rows Impfung = Influenza, Regionalschluessel_Kreis = 11000.
+# coverage_band: percent of ALL persons of the band who are vaccinated in the season; this is the value the model uses.
+#   Bands 60-69, 70-79, 80+: the coverage of the group 'Personen ab 60 Jahren'.
+#   Bands 18-29 to 50-59: coverage_risk times prevalence_risk (the file gives these ages only for 'Personen mit Grunderkrankung').
+# coverage_risk: percent of the persons with an underlying condition who are vaccinated, as in the file.
+# prevalence_risk: stratum size of the risk group divided by the number of persons of the band; the number of persons is the
+#   agents of population-ages.tsv times the ratio (stratum size of the group 60+) / (agents aged 60 and over) of the season.
+# source_season: the season the values are taken from; 2025/26 holds the last season of the file (assumption A42).
+# Built by Scenarios/Cologne-multiseason/build-vaccination-data.py on 2026-10-13.
+# Decision log: docs/influenza-multiseasonal.md, sections 7.5, 7.6; decision D19; assumptions A41 to A43.
+season	band	coverage_band	coverage_risk	prevalence_risk	source_season
+2022/23	18-29	1.13	9.86	0.115	2022/23
+2022/23	30-39	2.80	14.98	0.187	2022/23
+2022/23	40-49	5.11	20.04	0.255	2022/23
+2022/23	50-59	10.70	29.06	0.368	2022/23
+2022/23	60-69	39.67	44.74	0.615	2022/23
+2022/23	70-79	55.85	58.58	0.786	2022/23
+2022/23	80+	61.67	63.60	0.678	2022/23
+2023/24	18-29	1.02	8.86	0.115	2023/24
+2023/24	30-39	2.76	14.58	0.189	2023/24
+2023/24	40-49	4.91	18.70	0.262	2023/24
+2023/24	50-59	9.47	26.73	0.354	2023/24
+2023/24	60-69	37.25	42.22	0.626	2023/24
+2023/24	70-79	53.88	56.44	0.763	2023/24
+2023/24	80+	61.42	63.33	0.688	2023/24
+2024/25	18-29	1.00	8.81	0.114	2024/25
+2024/25	30-39	2.44	13.74	0.178	2024/25
+2024/25	40-49	4.61	17.59	0.262	2024/25
+2024/25	50-59	8.17	24.32	0.336	2024/25
+2024/25	60-69	33.56	38.41	0.637	2024/25
+2024/25	70-79	50.05	52.66	0.742	2024/25
+2024/25	80+	58.57	60.48	0.688	2024/25
+2025/26	18-29	1.00	8.81	0.114	2024/25
+2025/26	30-39	2.44	13.74	0.178	2024/25
+2025/26	40-49	4.61	17.59	0.262	2024/25
+2025/26	50-59	8.17	24.32	0.336	2024/25
+2025/26	60-69	33.56	38.41	0.637	2024/25
+2025/26	70-79	50.05	52.66	0.742	2024/25
+2025/26	80+	58.57	60.48	0.688	2024/25

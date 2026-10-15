@@ -9,7 +9,9 @@ import org.matsim.episim.run.scenarios.MultiSeasonImmunity;
 import org.matsim.episim.run.scenarios.MultiSeasonImport;
 import org.matsim.episim.run.scenarios.MultiSeasonPolicy;
 import org.matsim.episim.run.scenarios.MultiSeasonStrains;
+import org.matsim.episim.run.scenarios.MultiSeasonVaccines;
 import org.matsim.episim.run.scenarios.MultiSeasonVariant;
+import org.matsim.episim.run.scenarios.VaccinationCoverage;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,6 +45,9 @@ public final class GenerateInfluenzaConfig {
 	public static final String MULTISEASON_SENTINEL_PATH = "Scenarios/Berlin-multiseason/influenza-sentinel-weekly.csv";
 	public static final String MULTISEASON_HOLIDAYS_PATH = "Scenarios/Berlin-multiseason/berlin-school-holidays-2022-26.tsv";
 	public static final String MULTISEASON_WEATHER_PATH = "Scenarios/Berlin-multiseason/berlin-weather-2022-26.csv";
+
+	/** The seasonal influenza vaccination coverage of Berlin by age band (decision D19). */
+	public static final String MULTISEASON_VACCINATION_PATH = "Scenarios/Berlin-multiseason/vaccination-coverage-2022-26.tsv";
 
 	/** The ages of the Berlin population, which scale the age tables of the strains to one mean susceptibility (decision D16). */
 	public static final String MULTISEASON_AGES_PATH = "Scenarios/Berlin-multiseason/population-ages.tsv";
@@ -101,6 +106,9 @@ public final class GenerateInfluenzaConfig {
 		InfluenzaParameterisation.configure(config, strains, imports, MultiSeasonImport.HORIZON_START,
 				MULTISEASON_REFRACTORY_DAYS);
 		MultiSeasonImmunity.configure(config, variant.immunity().withPriorBMaxShare(variant.priorBMaxShare()));
+		// the yearly vaccination of the persons aged 60 and over with the coverage of Berlin (decision D19); null is the run without it
+		if (variant.vaccination() != null)
+			MultiSeasonVaccines.configure(config, variant.vaccination(), VaccinationCoverage.read(Path.of(MULTISEASON_VACCINATION_PATH)));
 
 		episimConfig.setLeisureOutdoorFraction(InfluenzaParameterisation.weatherOutdoorFraction(MULTISEASON_WEATHER_PATH,
 				AVG_WEATHER_PATH, MultiSeasonImport.HORIZON_START, MultiSeasonImport.HORIZON_END));

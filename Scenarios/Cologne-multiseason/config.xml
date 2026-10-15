@@ -337,6 +337,54 @@
 			<param name="infectivity" value="BVic=0>1.0;H3N2K_2025_26=0>1.0;SARS_CoV_2=0>1.0|2147483647>1.0;H1N1pdm09_2023_24=0>1.0;H1N1pdm09_2024_25=0>1.0;H3N2_2022_23=0>1.0" />
 			<param name="type" value="priorB" />
 		</parameterset>
+		<parameterset type="vaccinationParams" >
+			<param name="boostEffectiveness" value="" />
+			<param name="boostInfectivity" value="BVic=0>1.0;H3N2K_2025_26=0>1.0;SARS_CoV_2=0>1.0|2147483647>1.0;H1N1pdm09_2023_24=0>1.0;H1N1pdm09_2024_25=0>1.0;H3N2_2022_23=0>1.0" />
+			<param name="boostWaitPeriod" value="150" />
+			<param name="daysBeforeFullEffect" value="28" />
+			<param name="effectiveness" value="SARS_CoV_2=4>0.0|5>0.45|2147483647>0.9" />
+			<param name="factorCritical" value="SARS_CoV_2=0>1.0" />
+			<param name="factorSeriouslySick" value="SARS_CoV_2=5>0.5" />
+			<param name="factorShowingSymptoms" value="SARS_CoV_2=5>0.5" />
+			<param name="infectivity" value="BVic=0>1.0;H3N2K_2025_26=0>1.0;SARS_CoV_2=0>1.0|2147483647>1.0;H1N1pdm09_2023_24=0>1.0;H1N1pdm09_2024_25=0>1.0;H3N2_2022_23=0>1.0" />
+			<param name="type" value="flu_2022_23" />
+		</parameterset>
+		<parameterset type="vaccinationParams" >
+			<param name="boostEffectiveness" value="" />
+			<param name="boostInfectivity" value="BVic=0>1.0;H3N2K_2025_26=0>1.0;SARS_CoV_2=0>1.0|2147483647>1.0;H1N1pdm09_2023_24=0>1.0;H1N1pdm09_2024_25=0>1.0;H3N2_2022_23=0>1.0" />
+			<param name="boostWaitPeriod" value="150" />
+			<param name="daysBeforeFullEffect" value="28" />
+			<param name="effectiveness" value="SARS_CoV_2=4>0.0|5>0.45|2147483647>0.9" />
+			<param name="factorCritical" value="SARS_CoV_2=0>1.0" />
+			<param name="factorSeriouslySick" value="SARS_CoV_2=5>0.5" />
+			<param name="factorShowingSymptoms" value="SARS_CoV_2=5>0.5" />
+			<param name="infectivity" value="BVic=0>1.0;H3N2K_2025_26=0>1.0;SARS_CoV_2=0>1.0|2147483647>1.0;H1N1pdm09_2023_24=0>1.0;H1N1pdm09_2024_25=0>1.0;H3N2_2022_23=0>1.0" />
+			<param name="type" value="flu_2023_24" />
+		</parameterset>
+		<parameterset type="vaccinationParams" >
+			<param name="boostEffectiveness" value="" />
+			<param name="boostInfectivity" value="BVic=0>1.0;H3N2K_2025_26=0>1.0;SARS_CoV_2=0>1.0|2147483647>1.0;H1N1pdm09_2023_24=0>1.0;H1N1pdm09_2024_25=0>1.0;H3N2_2022_23=0>1.0" />
+			<param name="boostWaitPeriod" value="150" />
+			<param name="daysBeforeFullEffect" value="28" />
+			<param name="effectiveness" value="SARS_CoV_2=4>0.0|5>0.45|2147483647>0.9" />
+			<param name="factorCritical" value="SARS_CoV_2=0>1.0" />
+			<param name="factorSeriouslySick" value="SARS_CoV_2=5>0.5" />
+			<param name="factorShowingSymptoms" value="SARS_CoV_2=5>0.5" />
+			<param name="infectivity" value="BVic=0>1.0;H3N2K_2025_26=0>1.0;SARS_CoV_2=0>1.0|2147483647>1.0;H1N1pdm09_2023_24=0>1.0;H1N1pdm09_2024_25=0>1.0;H3N2_2022_23=0>1.0" />
+			<param name="type" value="flu_2024_25" />
+		</parameterset>
+		<parameterset type="vaccinationParams" >
+			<param name="boostEffectiveness" value="" />
+			<param name="boostInfectivity" value="BVic=0>1.0;H3N2K_2025_26=0>1.0;SARS_CoV_2=0>1.0|2147483647>1.0;H1N1pdm09_2023_24=0>1.0;H1N1pdm09_2024_25=0>1.0;H3N2_2022_23=0>1.0" />
+			<param name="boostWaitPeriod" value="150" />
+			<param name="daysBeforeFullEffect" value="28" />
+			<param name="effectiveness" value="SARS_CoV_2=4>0.0|5>0.45|2147483647>0.9" />
+			<param name="factorCritical" value="SARS_CoV_2=0>1.0" />
+			<param name="factorSeriouslySick" value="SARS_CoV_2=5>0.5" />
+			<param name="factorShowingSymptoms" value="SARS_CoV_2=5>0.5" />
+			<param name="infectivity" value="BVic=0>1.0;H3N2K_2025_26=0>1.0;SARS_CoV_2=0>1.0|2147483647>1.0;H1N1pdm09_2023_24=0>1.0;H1N1pdm09_2024_25=0>1.0;H3N2_2022_23=0>1.0" />
+			<param name="type" value="flu_2025_26" />
+		</parameterset>
 	</module>
 	<module name="eventsManager" >
 		<!-- Estimated number of events during mobsim run. An optional optimization hint for the framework. -->
@@ -1013,6 +1061,422 @@
 				<param name="strain" value="H3N2K_2025_26" />
 			</parameterset>
 		</parameterset>
+		<parameterset type="immunitySource" >
+			<param name="source" value="flu_2022_23" />
+			<param name="sourceKind" value="product" />
+			<parameterset type="protection" >
+				<param name="against" value="infectedButNotContagious" />
+				<param name="curve" value="0>0.0|14>0.18|180>0.09|365>0.0" />
+				<param name="strain" value="H3N2_2022_23" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="showingSymptoms" />
+				<param name="curve" value="0>0.0|14>0.2195|180>0.0989|365>0.0" />
+				<param name="strain" value="H3N2_2022_23" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="seriouslySick" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2_2022_23" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="critical" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2_2022_23" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="infectedButNotContagious" />
+				<param name="curve" value="0>0.0|14>0.38|180>0.19|365>0.0" />
+				<param name="strain" value="BVic" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="showingSymptoms" />
+				<param name="curve" value="0>0.0|14>0.6129|180>0.2346|365>0.0" />
+				<param name="strain" value="BVic" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="seriouslySick" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="BVic" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="critical" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="BVic" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="infectedButNotContagious" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2023_24" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="showingSymptoms" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2023_24" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="seriouslySick" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2023_24" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="critical" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2023_24" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="infectedButNotContagious" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2024_25" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="showingSymptoms" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2024_25" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="seriouslySick" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2024_25" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="critical" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2024_25" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="infectedButNotContagious" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2K_2025_26" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="showingSymptoms" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2K_2025_26" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="seriouslySick" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2K_2025_26" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="critical" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2K_2025_26" />
+			</parameterset>
+		</parameterset>
+		<parameterset type="immunitySource" >
+			<param name="source" value="flu_2023_24" />
+			<param name="sourceKind" value="product" />
+			<parameterset type="protection" >
+				<param name="against" value="infectedButNotContagious" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2_2022_23" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="showingSymptoms" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2_2022_23" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="seriouslySick" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2_2022_23" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="critical" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2_2022_23" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="infectedButNotContagious" />
+				<param name="curve" value="0>0.0|14>0.29|180>0.145|365>0.0" />
+				<param name="strain" value="BVic" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="showingSymptoms" />
+				<param name="curve" value="0>0.0|14>0.4085|180>0.1696|365>0.0" />
+				<param name="strain" value="BVic" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="seriouslySick" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="BVic" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="critical" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="BVic" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="infectedButNotContagious" />
+				<param name="curve" value="0>0.0|14>0.265|180>0.1325|365>0.0" />
+				<param name="strain" value="H1N1pdm09_2023_24" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="showingSymptoms" />
+				<param name="curve" value="0>0.0|14>0.3605|180>0.1527|365>0.0" />
+				<param name="strain" value="H1N1pdm09_2023_24" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="seriouslySick" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2023_24" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="critical" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2023_24" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="infectedButNotContagious" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2024_25" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="showingSymptoms" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2024_25" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="seriouslySick" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2024_25" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="critical" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2024_25" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="infectedButNotContagious" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2K_2025_26" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="showingSymptoms" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2K_2025_26" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="seriouslySick" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2K_2025_26" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="critical" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2K_2025_26" />
+			</parameterset>
+		</parameterset>
+		<parameterset type="immunitySource" >
+			<param name="source" value="flu_2024_25" />
+			<param name="sourceKind" value="product" />
+			<parameterset type="protection" >
+				<param name="against" value="infectedButNotContagious" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2_2022_23" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="showingSymptoms" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2_2022_23" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="seriouslySick" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2_2022_23" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="critical" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2_2022_23" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="infectedButNotContagious" />
+				<param name="curve" value="0>0.0|14>0.29|180>0.145|365>0.0" />
+				<param name="strain" value="BVic" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="showingSymptoms" />
+				<param name="curve" value="0>0.0|14>0.4085|180>0.1696|365>0.0" />
+				<param name="strain" value="BVic" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="seriouslySick" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="BVic" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="critical" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="BVic" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="infectedButNotContagious" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2023_24" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="showingSymptoms" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2023_24" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="seriouslySick" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2023_24" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="critical" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2023_24" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="infectedButNotContagious" />
+				<param name="curve" value="0>0.0|14>0.215|180>0.1075|365>0.0" />
+				<param name="strain" value="H1N1pdm09_2024_25" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="showingSymptoms" />
+				<param name="curve" value="0>0.0|14>0.2739|180>0.1204|365>0.0" />
+				<param name="strain" value="H1N1pdm09_2024_25" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="seriouslySick" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2024_25" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="critical" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2024_25" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="infectedButNotContagious" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2K_2025_26" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="showingSymptoms" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2K_2025_26" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="seriouslySick" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2K_2025_26" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="critical" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2K_2025_26" />
+			</parameterset>
+		</parameterset>
+		<parameterset type="immunitySource" >
+			<param name="source" value="flu_2025_26" />
+			<param name="sourceKind" value="product" />
+			<parameterset type="protection" >
+				<param name="against" value="infectedButNotContagious" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2_2022_23" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="showingSymptoms" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2_2022_23" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="seriouslySick" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2_2022_23" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="critical" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2_2022_23" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="infectedButNotContagious" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="BVic" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="showingSymptoms" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="BVic" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="seriouslySick" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="BVic" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="critical" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="BVic" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="infectedButNotContagious" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2023_24" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="showingSymptoms" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2023_24" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="seriouslySick" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2023_24" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="critical" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2023_24" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="infectedButNotContagious" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2024_25" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="showingSymptoms" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2024_25" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="seriouslySick" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2024_25" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="critical" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H1N1pdm09_2024_25" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="infectedButNotContagious" />
+				<param name="curve" value="0>0.0|14>0.06|180>0.03|365>0.0" />
+				<param name="strain" value="H3N2K_2025_26" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="showingSymptoms" />
+				<param name="curve" value="0>0.0|14>0.0638|180>0.0309|365>0.0" />
+				<param name="strain" value="H3N2K_2025_26" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="seriouslySick" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2K_2025_26" />
+			</parameterset>
+			<parameterset type="protection" >
+				<param name="against" value="critical" />
+				<param name="curve" value="0>0.0" />
+				<param name="strain" value="H3N2K_2025_26" />
+			</parameterset>
+		</parameterset>
 	</module>
 	<module name="linkStats" >
 		<!-- Specifies over how many iterations the link volumes should be averaged that are used for the link statistics. Use 1 or 0 to only use the link volumes of a single iteration. This values cannot be larger than the value specified for writeLinkStatsInterval -->
@@ -1394,6 +1858,32 @@
 				<param name="mode" value="other" />
 				<param name="monetaryDistanceRate" value="0.0" />
 			</parameterset>
+		</parameterset>
+	</module>
+	<module name="seasonalVaccination" >
+		<parameterset type="season" >
+			<param name="product" value="flu_2022_23" />
+			<param name="season" value="2022/23" />
+			<param name="shareByAge" value="0=0.0;59=0.0;60=0.3421;69=0.3421;70=0.4795;79=0.4795;80=0.5231" />
+			<param name="timing" value="2022-09-30=0.0;2022-10-31=0.5;2022-11-30=0.85;2022-12-31=1.0" />
+		</parameterset>
+		<parameterset type="season" >
+			<param name="product" value="flu_2023_24" />
+			<param name="season" value="2023/24" />
+			<param name="shareByAge" value="0=0.0;59=0.0;60=0.329;69=0.329;70=0.4636;79=0.4636;80=0.5228" />
+			<param name="timing" value="2023-09-30=0.0;2023-10-31=0.5;2023-11-30=0.85;2023-12-31=1.0" />
+		</parameterset>
+		<parameterset type="season" >
+			<param name="product" value="flu_2024_25" />
+			<param name="season" value="2024/25" />
+			<param name="shareByAge" value="0=0.0;59=0.0;60=0.295;69=0.295;70=0.422;79=0.422;80=0.4881" />
+			<param name="timing" value="2024-09-30=0.0;2024-10-31=0.5;2024-11-30=0.85;2024-12-31=1.0" />
+		</parameterset>
+		<parameterset type="season" >
+			<param name="product" value="flu_2025_26" />
+			<param name="season" value="2025/26" />
+			<param name="shareByAge" value="0=0.0;59=0.0;60=0.295;69=0.295;70=0.422;79=0.422;80=0.4881" />
+			<param name="timing" value="2025-09-30=0.0;2025-10-31=0.5;2025-11-30=0.85;2025-12-31=1.0" />
 		</parameterset>
 	</module>
 	<module name="subtourModeChoice" >

@@ -13,6 +13,7 @@ import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.episim.EpisimConfigGroup;
 import org.matsim.episim.ImmunityConfigGroup;
 import org.matsim.episim.PathogenConfigGroup;
+import org.matsim.episim.SeasonalVaccinationConfigGroup;
 import org.matsim.episim.TracingConfigGroup;
 import org.matsim.episim.VaccinationConfigGroup;
 import org.matsim.episim.VirusStrainConfigGroup;
@@ -28,6 +29,7 @@ import org.matsim.episim.model.progression.DiseaseStatusTransitionModel;
 import org.matsim.episim.model.testing.DefaultTestingModel;
 import org.matsim.episim.model.testing.TestingModel;
 import org.matsim.episim.model.vaccination.NoVaccination;
+import org.matsim.episim.model.vaccination.SeasonalVaccinationModel;
 import org.matsim.episim.model.vaccination.VaccinationModel;
 import org.matsim.episim.policy.FixedPolicy;
 import org.matsim.episim.policy.ShutdownPolicy;
@@ -76,8 +78,11 @@ public class InfluenzaScenario extends AbstractModule {
 		bind(InfectionModel.class).to(AgeAndProgressionDependentInfectionModelWithSeasonality.class).in(Singleton.class);
 		bind(DiseaseStatusTransitionModel.class).to(AgeDependentDiseaseStatusTransitionModel.class).in(Singleton.class);
 		bind(VaccinationModel.class).to(NoVaccination.class).in(Singleton.class);
-		// the immunity of the population at the start of the run; does nothing without a product in the config (D17)
-		Multibinder.newSetBinder(binder(), VaccinationModel.class).addBinding().to(PriorImmunityModel.class).in(Singleton.class);
+		// the immunity of the population at the start of the run; does nothing without a product in the config
+		Multibinder<VaccinationModel> vaccinations = Multibinder.newSetBinder(binder(), VaccinationModel.class);
+		vaccinations.addBinding().to(PriorImmunityModel.class).in(Singleton.class);
+		// the yearly vaccination of the persons aged 60 and over (D19); does nothing without a season in the config
+		vaccinations.addBinding().to(SeasonalVaccinationModel.class).in(Singleton.class);
 		bind(TestingModel.class).to(DefaultTestingModel.class).in(Singleton.class);
 		bind(ShutdownPolicy.class).to(FixedPolicy.class).in(Singleton.class);
 		bind(ActivityParticipationModel.class).to(DefaultParticipationModel.class);
@@ -101,7 +106,8 @@ public class InfluenzaScenario extends AbstractModule {
 		// single-season configs, where it stands for the legacy model, and is explicit in the multi-season config
 		Config config = ConfigUtils.loadConfig(file.toString(),
 				new EpisimConfigGroup(), new TracingConfigGroup(), new VirusStrainConfigGroup(), new PathogenConfigGroup(),
-				new ImmunityConfigGroup(), new PriorImmunityConfigGroup(), new VaccinationConfigGroup());
+				new ImmunityConfigGroup(), new PriorImmunityConfigGroup(), new SeasonalVaccinationConfigGroup(),
+				new VaccinationConfigGroup());
 
 		// reject a config without a policy file instead of running without school holidays
 		String policy = ConfigUtils.addOrGetModule(config, EpisimConfigGroup.class).getPolicyConfig();

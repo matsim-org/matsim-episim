@@ -20,7 +20,7 @@
     </licenses>
 
     <properties>
-        <episim.version>2027-SNAPSHOT-29.09.26</episim.version>
+        <episim.version>2027-SNAPSHOT-15.10.26</episim.version>
         <java.version>25</java.version>
         <mainClass>org.matsim.run.RunEpisim</mainClass>
     </properties>
@@ -108,6 +108,21 @@
             <version>${episim.version}</version>
         </dependency>
 
+        <!-- test dependencies of matsim-episim-libs are not transitive -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>6.0.3</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.27.7</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -129,7 +144,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M5</version>
+                <version>3.5.2</version>
                 <configuration>
                     <excludes>
                         <exclude>**/*$*</exclude> <!-- exclude all inner classes -->

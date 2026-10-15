@@ -19,14 +19,17 @@ package org.matsim.episim.run.scenarios;
  *                                keeps all strains equal (D13); the base has 0.5 (D18)
  * @param immunity                the parameters of the immunity curves (section 5); {@code priorBMaxShare} of them is replaced by
  *                                the field above
+ * @param vaccination             the yearly vaccination of the persons aged 60 and over (D19, section 7.6); {@code null} switches it
+ *                                off (the comparison run without vaccination)
  */
 public record MultiSeasonVariant(double holidaySchoolFraction, boolean weatherOutdoorFraction, double christmasWorkFraction,
 								 double importFactor, double priorBMaxShare, double bvicInfectiousnessFactor,
-								 MultiSeasonImmunity.Parameters immunity) {
+								 MultiSeasonImmunity.Parameters immunity, MultiSeasonVaccines.Parameters vaccination) {
 
 	public static final MultiSeasonVariant BASE = new MultiSeasonVariant(InfluenzaParameterisation.HOLIDAY_SCHOOL_FRACTION, true, 1.0, 1.0,
 			MultiSeasonImmunity.Parameters.defaults().priorBMaxShare(), 0.5,
-			MultiSeasonImmunity.Parameters.defaults().withH1n1Pair(0.5).withHalfLifeScale(0.5));
+			MultiSeasonImmunity.Parameters.defaults().withH1n1Pair(0.5).withHalfLifeScale(0.5),
+			MultiSeasonVaccines.Parameters.defaults());
 
 	public MultiSeasonVariant {
 		if (holidaySchoolFraction < 0 || holidaySchoolFraction > 1 || christmasWorkFraction < 0 || christmasWorkFraction > 1)
@@ -42,31 +45,42 @@ public record MultiSeasonVariant(double holidaySchoolFraction, boolean weatherOu
 	}
 
 	public MultiSeasonVariant withHolidaySchoolFraction(double fraction) {
-		return new MultiSeasonVariant(fraction, weatherOutdoorFraction, christmasWorkFraction, importFactor, priorBMaxShare, bvicInfectiousnessFactor, immunity);
+		return new MultiSeasonVariant(fraction, weatherOutdoorFraction, christmasWorkFraction, importFactor, priorBMaxShare, bvicInfectiousnessFactor, immunity, vaccination);
 	}
 
 	public MultiSeasonVariant withWeatherOutdoorFraction(boolean weather) {
-		return new MultiSeasonVariant(holidaySchoolFraction, weather, christmasWorkFraction, importFactor, priorBMaxShare, bvicInfectiousnessFactor, immunity);
+		return new MultiSeasonVariant(holidaySchoolFraction, weather, christmasWorkFraction, importFactor, priorBMaxShare, bvicInfectiousnessFactor, immunity, vaccination);
 	}
 
 	public MultiSeasonVariant withChristmasWorkFraction(double fraction) {
-		return new MultiSeasonVariant(holidaySchoolFraction, weatherOutdoorFraction, fraction, importFactor, priorBMaxShare, bvicInfectiousnessFactor, immunity);
+		return new MultiSeasonVariant(holidaySchoolFraction, weatherOutdoorFraction, fraction, importFactor, priorBMaxShare, bvicInfectiousnessFactor, immunity, vaccination);
 	}
 
 	public MultiSeasonVariant withImportFactor(double factor) {
-		return new MultiSeasonVariant(holidaySchoolFraction, weatherOutdoorFraction, christmasWorkFraction, factor, priorBMaxShare, bvicInfectiousnessFactor, immunity);
+		return new MultiSeasonVariant(holidaySchoolFraction, weatherOutdoorFraction, christmasWorkFraction, factor, priorBMaxShare, bvicInfectiousnessFactor, immunity, vaccination);
 	}
 
 	public MultiSeasonVariant withPriorBMaxShare(double share) {
-		return new MultiSeasonVariant(holidaySchoolFraction, weatherOutdoorFraction, christmasWorkFraction, importFactor, share, bvicInfectiousnessFactor, immunity);
+		return new MultiSeasonVariant(holidaySchoolFraction, weatherOutdoorFraction, christmasWorkFraction, importFactor, share, bvicInfectiousnessFactor, immunity, vaccination);
 	}
 
 	public MultiSeasonVariant withBvicInfectiousnessFactor(double factor) {
-		return new MultiSeasonVariant(holidaySchoolFraction, weatherOutdoorFraction, christmasWorkFraction, importFactor, priorBMaxShare, factor, immunity);
+		return new MultiSeasonVariant(holidaySchoolFraction, weatherOutdoorFraction, christmasWorkFraction, importFactor, priorBMaxShare, factor, immunity, vaccination);
 	}
 
 	public MultiSeasonVariant withImmunity(MultiSeasonImmunity.Parameters parameters) {
 		return new MultiSeasonVariant(holidaySchoolFraction, weatherOutdoorFraction, christmasWorkFraction, importFactor, priorBMaxShare,
-				bvicInfectiousnessFactor, parameters);
+				bvicInfectiousnessFactor, parameters, vaccination);
+	}
+
+	/** The variant with the vaccination of these parameters. */
+	public MultiSeasonVariant withVaccination(MultiSeasonVaccines.Parameters parameters) {
+		return new MultiSeasonVariant(holidaySchoolFraction, weatherOutdoorFraction, christmasWorkFraction, importFactor, priorBMaxShare,
+				bvicInfectiousnessFactor, immunity, parameters);
+	}
+
+	/** The variant without vaccination. */
+	public MultiSeasonVariant withoutVaccination() {
+		return withVaccination(null);
 	}
 }

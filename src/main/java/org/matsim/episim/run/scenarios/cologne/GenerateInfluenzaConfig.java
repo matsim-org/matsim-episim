@@ -9,7 +9,9 @@ import org.matsim.episim.run.scenarios.MultiSeasonImmunity;
 import org.matsim.episim.run.scenarios.MultiSeasonImport;
 import org.matsim.episim.run.scenarios.MultiSeasonPolicy;
 import org.matsim.episim.run.scenarios.MultiSeasonStrains;
+import org.matsim.episim.run.scenarios.MultiSeasonVaccines;
 import org.matsim.episim.run.scenarios.MultiSeasonVariant;
+import org.matsim.episim.run.scenarios.VaccinationCoverage;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -40,6 +42,7 @@ public final class GenerateInfluenzaConfig {
 	public static final String MULTISEASON_SENTINEL_PATH = "Scenarios/Cologne-multiseason/influenza-sentinel-weekly.csv";
 	public static final String MULTISEASON_HOLIDAYS_PATH = "Scenarios/Cologne-multiseason/nrw-school-holidays-2022-26.tsv";
 	public static final String MULTISEASON_AGES_PATH = "Scenarios/Cologne-multiseason/population-ages.tsv";
+	public static final String MULTISEASON_VACCINATION_PATH = "Scenarios/Cologne-multiseason/vaccination-coverage-2022-26.tsv";
 	public static final String MULTISEASON_WEATHER_PATH = "Scenarios/Cologne-multiseason/cologne-weather-2022-26.csv";
 
 	/** The average year of the single-season scenario, which the weather helper continues with; not copied (decision log D3). */
@@ -141,6 +144,9 @@ public final class GenerateInfluenzaConfig {
 		InfluenzaParameterisation.configure(config, strains, imports, MultiSeasonImport.HORIZON_START,
 				MULTISEASON_REFRACTORY_DAYS);
 		MultiSeasonImmunity.configure(config, variant.immunity().withPriorBMaxShare(variant.priorBMaxShare()));
+		// the yearly vaccination of the persons aged 60 and over with the coverage of Köln (decision D19); null is the run without it
+		if (variant.vaccination() != null)
+			MultiSeasonVaccines.configure(config, variant.vaccination(), VaccinationCoverage.read(Path.of(MULTISEASON_VACCINATION_PATH)));
 
 		episimConfig.setLeisureOutdoorFraction(variant.weatherOutdoorFraction()
 				? InfluenzaParameterisation.weatherOutdoorFraction(MULTISEASON_WEATHER_PATH, MULTISEASON_AVG_WEATHER_PATH,
