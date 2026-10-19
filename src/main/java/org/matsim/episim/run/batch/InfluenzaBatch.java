@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.episim.BatchRun;
+import org.matsim.episim.analysis.ExtractInfectionsByAge;
 import org.matsim.episim.analysis.FilterEvents;
 import org.matsim.episim.analysis.InfectionLocationsFromEvents;
 import org.matsim.episim.analysis.OutputAnalysis;
@@ -177,7 +178,9 @@ public abstract class InfluenzaBatch<P> implements BatchRun<P> {
 		String startDate = descriptor().start().toString();
 		List<OutputAnalysis> analyses = new ArrayList<>(List.of(
 			new InfectionLocationsFromEvents(),
-			new RValuesFromEvents().withArgs("--start-date", startDate)));
+			new RValuesFromEvents().withArgs("--start-date", startDate),
+			// city is the district attribute of the population, as for BatchOutputPacker
+			new ExtractInfectionsByAge().withArgs("--district", descriptor().city())));
 		// SecondaryAttackRateFromEvents only counts the district Köln (hard-coded in matsim-episim-libs)
 		if (descriptor().city().equals("Köln"))
 			analyses.add(new SecondaryAttackRateFromEvents().withArgs("--start-date", startDate));
